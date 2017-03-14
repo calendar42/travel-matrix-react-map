@@ -1,4 +1,5 @@
 {
   "accessToken": "pk.eyJ1IjoiamFzcGVyaGFydG9uZyIsImEiOiJjajA5amJ2cGUwMDNnMndvd3o4emd4eDgwIn0.IubaWWxjQYPSP_WuuTaZMQ",
-  "style": "mapbox://styles/mapbox/streets-v9"
+  "style": "mapbox://styles/mapbox/streets-v9",
+  "center": [ 4.3666811, 51.996583 ]
 }

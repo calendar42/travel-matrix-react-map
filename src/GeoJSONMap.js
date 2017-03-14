@@ -1,19 +1,9 @@
 import React, { Component } from "react";
 import ReactMapboxGl, { Layer, Feature, GeoJSONLayer, ScaleControl, ZoomControl } from "react-mapbox-gl";
 import config from "./config.json";
+import { getGeoJson } from './MatrixService.js';
 
-const { accessToken } = config;
-
-const containerStyle = {
-  height: "100vh",
-  width: "100%"
-};
-
-const center = [ 4.3666811, 51.996583 ];
-
-
-
-
+const { accessToken, center } = config;
 
 export default class GeoJSONMap extends Component {
   state = {
@@ -30,8 +20,9 @@ export default class GeoJSONMap extends Component {
     };
   };
 
-  markerClick = function (c) {
-    alert(c);
+  markerClick = function (marker, event) {
+    event.originalEvent.preventDefault()
+    alert(marker)
   };
 
   onMapClick = function (map, event) {
@@ -39,7 +30,7 @@ export default class GeoJSONMap extends Component {
     var marker = this.createMarker(event.lngLat)
     var new_markers = new Map().set(marker.id, marker)
 
-    this.refreshMatrixGeoJson(new_markers, this.state.markers).then(geojson => {
+    getGeoJson(new_markers, this.state.markers).then(geojson => {
       self.setState({
         "geojson": geojson
       })
@@ -50,58 +41,6 @@ export default class GeoJSONMap extends Component {
     });
     
   };
-
-  // componentWillMount = function () {
-  //   // this.setState({markers:[[ 4.3504057,52.0149705 ], [ 4.3428165,52.0108834 ] ]});
-  // };
-  
-
-  markersToParams = function (markers) {
-    return Array.from(markers.values()).map(m=>m.latLng).join(';')
-  }
-
-  refreshMatrixGeoJson = function (departures, arrivals) {
-    if (!departures || !arrivals) {
-      departures = this.markersToParams(this.state.markers)
-      arrivals = departures
-    } else {
-      departures = this.markersToParams(departures)
-      arrivals = this.markersToParams(arrivals)
-    }
-
-    if (departures === "" || arrivals === "") {
-      return new Promise((resolve) => { resolve(); });
-    }
-
-    return fetch("/matrix?departures="+arrivals+"&arrivals="+departures+"&debug=true&search_range=100")
-      .then(res => res.text())
-      .then(data => {
-        return new Promise((resolve, reject) => {
-          var geojson = {
-            "type": "FeatureCollection",
-            "features": []
-          }
-          data = JSON.parse(data)
-          data.forEach(
-            (row) => (
-              row.forEach(
-                (column) => (
-                  geojson["features"] = geojson["features"].concat(column[2]["features"])
-                    ))))
-          resolve(geojson)
-          
-          // parseString(data, (err, res) => {
-          //   if(!err) {
-          //     resolve(res);
-          //   } else {
-          //     reject(err);
-          //   }
-          // });
-        });
-      })
-  }
-
-
 
   render() {
     return (
@@ -114,7 +53,6 @@ export default class GeoJSONMap extends Component {
         onClick={this.onMapClick.bind(this)}
         containerStyle={{ height: "100vh", width: "100%" }}>
         
-
         <ScaleControl/>
         <ZoomControl/>
 
