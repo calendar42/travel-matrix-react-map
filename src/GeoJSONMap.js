@@ -18,42 +18,55 @@ const center = [ 4.3666811, 51.996583 ];
 export default class GeoJSONMap extends Component {
   state = {
     center: center,
-    marker_coordinates: [],
+    markers: new Map(),
     geojson: null
   };
+
+  createMarker = function (lngLat) {
+    return {
+      "id": lngLat.toString(),
+      "lngLat": lngLat.toArray(),
+      "latLng": lngLat.toArray().reverse()
+    };
+  };
+
   markerClick = function (c) {
     alert(c);
   };
+
   onMapClick = function (map, event) {
-    var self = this;
-    this.refreshMatrixGeoJson([event.lngLat.toArray()], this.state.marker_coordinates).then(geojson => {
-      console.log(JSON.stringify(geojson));
+    var self = this
+    var marker = this.createMarker(event.lngLat)
+    var new_markers = new Map().set(marker.id, marker)
+
+    this.refreshMatrixGeoJson(new_markers, this.state.markers).then(geojson => {
       self.setState({
         "geojson": geojson
       })
     });
-
-    var new_markers = this.state.marker_coordinates.concat([event.lngLat.toArray()]);
+    
     this.setState({
-      "marker_coordinates": new_markers
+      "markers": new Map([...this.state.markers, ...new_markers])
     });
     
   };
 
-  componentWillMount = function () {
-    // this.setState({marker_coordinates:[[ 4.3504057,52.0149705 ], [ 4.3428165,52.0108834 ] ]});
-  };
+  // componentWillMount = function () {
+  //   // this.setState({markers:[[ 4.3504057,52.0149705 ], [ 4.3428165,52.0108834 ] ]});
+  // };
+  
 
-  getParamStringFromCoordinates = function (coordinates) {
-    return coordinates.map((coordinate) => ([coordinate[1], coordinate[0]])).join(';');
+  markersToParams = function (markers) {
+    return Array.from(markers.values()).map(m=>m.latLng).join(';')
   }
+
   refreshMatrixGeoJson = function (departures, arrivals) {
     if (!departures || !arrivals) {
-      departures = this.getParamStringFromCoordinates(this.state.marker_coordinates)
+      departures = this.markersToParams(this.state.markers)
       arrivals = departures
     } else {
-      departures = this.getParamStringFromCoordinates(departures)
-      arrivals = this.getParamStringFromCoordinates(arrivals)
+      departures = this.markersToParams(departures)
+      arrivals = this.markersToParams(arrivals)
     }
 
     if (departures === "" || arrivals === "") {
@@ -110,14 +123,14 @@ export default class GeoJSONMap extends Component {
           id="marker"
           layout={{ "icon-image": "marker-15" }}>
           {
-            this.state.marker_coordinates
-              .map((coordinate, index) => (
+            Array.from(this.state.markers.values())
+              .map((marker, index) => (
                 <Feature
-                  // key={index}
+                  key={marker.id}
                   // onMouseEnter={this._onToggleHover.bind(this, "pointer")}
                   // onMouseLeave={this._onToggleHover.bind(this, "")}
-                  onClick={this.markerClick.bind(this, coordinate)}
-                  coordinates={coordinate}/>
+                  onClick={this.markerClick.bind(this, marker)}
+                  coordinates={marker.lngLat}/>
               ))
           }
         </Layer>
