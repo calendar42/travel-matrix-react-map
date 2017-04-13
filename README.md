@@ -1,4 +1,8 @@
-This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app).
+An example of visualizing data coming from the C42 Travel Matrix Server. Exploring how easy it is to us the [Create React App](https://github.com/facebookincubator/create-react-app) bootstrapper together with [React MapBox GL](https://github.com/alex3165/react-mapbox-gl/blob/master/docs/API.md).
+
+This project includes [Bootstrap](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#adding-bootstrap) for CSS, it's not used much though.
+
+This project currently expects a local travel matrix on port `5000` to be running as defined with `proxy` in the `package.json`.
 
 Below you will find some information on how to perform common tasks.<br>
 You can find the most recent version of this guide [here](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md).

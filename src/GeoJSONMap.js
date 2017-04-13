@@ -1,18 +1,20 @@
 import React, { Component } from "react";
-import ReactMapboxGl, { Layer, Feature, GeoJSONLayer, ScaleControl, ZoomControl } from "react-mapbox-gl";
+import ReactMapboxGl, { Popup, Layer, Feature, GeoJSONLayer, ScaleControl, ZoomControl } from "react-mapbox-gl";
 import config from "./config.json";
 import { getGeoJson } from './MatrixService.js';
-
+import { Button } from 'react-bootstrap';
 const { accessToken, center } = config;
 
 export default class GeoJSONMap extends Component {
   state = {
     center: center,
     markers: new Map(),
-    geojson: null
+    geojson: null,
+    popup: null
   };
 
-  createMarker = function (lngLat) {
+
+  newMarker = function (lngLat) {
     return {
       "id": lngLat.toString(),
       "lngLat": lngLat.toArray(),
@@ -20,14 +22,33 @@ export default class GeoJSONMap extends Component {
     };
   };
 
-  markerClick = function (marker, event) {
-    event.originalEvent.preventDefault()
-    alert(marker)
+  removeMarker = function (marker) {
+    var self = this
+    this.state.markers.delete(marker.id);
+    var newState = {
+      "markers": this.state.markers,
+      "geojson": null
+    }
+    if (this.state.popup.id == marker.id) {
+      newState["popup"] = null;
+    }
+    this.setState(newState);
   };
+
+  _setPopup = function (marker) {
+    this.setState({
+      "popup":marker
+    })
+  };
+
+  // _onToggleHover = function (marker, hoverType) {
+  //   marker = hoverType === "pointer" ? marker : null
+  //   // this._setPopup(marker)
+  // };
 
   onMapClick = function (map, event) {
     var self = this
-    var marker = this.createMarker(event.lngLat)
+    var marker = this.newMarker(event.lngLat)
     var new_markers = new Map().set(marker.id, marker)
 
     getGeoJson(new_markers, this.state.markers).then(geojson => {
@@ -65,25 +86,35 @@ export default class GeoJSONMap extends Component {
               .map((marker, index) => (
                 <Feature
                   key={marker.id}
-                  // onMouseEnter={this._onToggleHover.bind(this, "pointer")}
-                  // onMouseLeave={this._onToggleHover.bind(this, "")}
-                  onClick={this.markerClick.bind(this, marker)}
+                  // onMouseEnter={this._onToggleHover.bind(this, marker, "pointer")}
+                  // onMouseLeave={this._onToggleHover.bind(this, marker, "")}
+                  // onClick={this.markerClick.bind(this, marker)}
                   coordinates={marker.lngLat}/>
               ))
           }
         </Layer>
 
+        { this.state.popup &&
+        <Popup
+          coordinates={this.state.popup.lngLat}
+          >
+          <Button onClick={this.removeMarker.bind(this, this.state.popup)}>Remove me</Button>
+        </Popup>
+        }
+
         { this.state.geojson &&
         <GeoJSONLayer
           data={this.state.geojson}
           linePaint= {{
-            "line-color": "#000000",
-            "line-width": 1,
-            "line-opacity": 0.6
+            "line-color": "#44bbff",
+            "line-width": 8,
+            "line-opacity": 0.8,
+            "line-offset":0.1,
+            "line-blur": 4
           }}
           lineLayout={{ visibility: "visible" }}
           circleLayout={{
-            "visibility": "visible"
+            "visibility": "false"
           }}
           circlePaint = {{
             "circle-radius": 2

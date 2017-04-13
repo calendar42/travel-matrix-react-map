@@ -14,11 +14,15 @@ export function getGeoJson (departures, arrivals) {
     .then(res => res.text())
     .then(data => {
       return new Promise((resolve, reject) => {
+
+        // Create root geojson FeatureCollection
         var geojson = {
           "type": "FeatureCollection",
           "features": []
         }
         data = JSON.parse(data)
+
+        // Walk over rows and columns and push feature into root geojson
         data.forEach(
           (row) => (
             row.forEach(
@@ -26,6 +30,7 @@ export function getGeoJson (departures, arrivals) {
                 geojson["features"] = geojson["features"].concat(column[2]["features"])
                   ))))
         resolve(geojson)
+
         // TODO: Handle failures
         // parseString(data, (err, res) => {
         //   if(!err) {
