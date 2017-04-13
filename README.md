@@ -4,6 +4,8 @@ This project includes [Bootstrap](https://github.com/facebookincubator/create-re
 
 This project currently expects a local travel matrix on port `5000` to be running as defined with `proxy` in the `package.json`.
 
+![image](https://cloud.githubusercontent.com/assets/452291/25022767/7666957e-2097-11e7-9c60-55281fd34272.png)
+
 Below you will find some information on how to perform common tasks.<br>
 You can find the most recent version of this guide [here](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md).
 
