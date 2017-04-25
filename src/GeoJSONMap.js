@@ -86,9 +86,6 @@ export default class GeoJSONMap extends Component {
               .map((marker, index) => (
                 <Feature
                   key={marker.id}
-                  // onMouseEnter={this._onToggleHover.bind(this, marker, "pointer")}
-                  // onMouseLeave={this._onToggleHover.bind(this, marker, "")}
-                  // onClick={this.markerClick.bind(this, marker)}
                   coordinates={marker.lngLat}/>
               ))
           }

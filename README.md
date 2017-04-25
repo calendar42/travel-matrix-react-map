@@ -1,4 +1,4 @@
-An example of visualizing data coming from the C42 Travel Matrix Server. Exploring how easy it is to us the [Create React App](https://github.com/facebookincubator/create-react-app) bootstrapper together with [React MapBox GL](https://github.com/alex3165/react-mapbox-gl/blob/master/docs/API.md).
+An example of visualising data coming from the C42 Travel Matrix Server. Exploring how easy it is to us the [Create React App](https://github.com/facebookincubator/create-react-app) bootstrapper together with [React MapBox GL](https://github.com/alex3165/react-mapbox-gl/blob/master/docs/API.md).
 
 This project includes [Bootstrap](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#adding-bootstrap) for CSS, it's not used much though.
 
