@@ -20,11 +20,13 @@ const iconImage = "dot-11";
 // const iconImage = "toogethr-dot";
 
 
-const ToogethrColors = ["#3E1C73","#FD5056", "#20A99F"];
-
-
+const ToogethrColors = ["#3E1C73","#FD5056", "#20A99F", "#20A99F"];
 
 // Vintage: https://www.mapbox.com/gallery/#map-7
+
+const all_features = points.coords.map(function (coordinates){
+  return {coordinates:coordinates, random: 1 };
+});
 
 export default class GeoJSONMap extends Component {
   constructor(props) {
@@ -35,35 +37,38 @@ export default class GeoJSONMap extends Component {
       lineWidth: 3,
       color_0: ToogethrColors[2],
       color_1: ToogethrColors[1],
+      color_2: ToogethrColors[3],
+      color_3: ToogethrColors[0],
       style: defaultStyle,
-      radius:5,
-      pitch:20,
-      markers: [],
+      markerRadius:21,
+      circlesRadius: 30,
+      pitch:0,
+      filteredFeatures: [],
       personCoords: [4.53,52.22],
       personUrl:"//s3.amazonaws.com/uifaces/faces/twitter/adhamdannaway/128.jpg",
       destinationUrl:"https://pbs.twimg.com/profile_images/692731013462675456/-FkBGCfi_400x400.png",
-      open: true
-
+      open: true,
     };
   }
 
   componentDidMount() {
-    this.setFilteredMarkers();
-  }
-
-  setFilteredMarkers() {
-    this.setState({
-      markers: points.coords.filter(this.distanceFilter)
-    });
-  }
+    this.setFilteredFeatures();
+  }  
 
   onMapClick(map, event) {
     this.setState({
       personCoords: event.lngLat.toArray(),
-    },this.setFilteredMarkers);
+      filteredFeatures: []
+    },this.setFilteredFeatures);
   }
 
-  distanceFilter = coords => haversineDistance(coords, this.state.personCoords) < this.state.radius;
+  setFilteredFeatures() {
+    this.setState({
+      filteredFeatures: all_features.filter(this.distanceFilter)
+    });
+  }
+
+  distanceFilter = feature => haversineDistance(feature.coordinates, this.state.personCoords) < this.state.markerRadius;
 
   changeWidth = ev => this.setState({
     lineWidth: (ev.target.value ? parseFloat(ev.target.value) : 0)
@@ -81,29 +86,34 @@ export default class GeoJSONMap extends Component {
     color_1: (ev.target.value ? ev.target.value : "#FFFFFF")
   })
 
+  changeColor2 = ev => this.setState({
+    color_2: (ev.target.value ? ev.target.value : "#FFFFFF")
+  })
+
+  changeColor3 = ev => this.setState({
+    color_3: (ev.target.value ? ev.target.value : "#FFFFFF")
+  })
+
   changeStyle = ev => this.setState({
     style: (ev.target.value ? ev.target.value : "#FFFFFF")
   })
 
-  changeRadius(event) {
+  changeMarkerRadius(event) {
     this.setState({
-      radius: event.target.value
-    },this.setFilteredMarkers);
+      markerRadius: event.target.value
+    },this.setFilteredFeatures);
   }
 
+  changeCirclesRadius = ev => this.setState({
+    circlesRadius: (ev.target.value ? parseFloat(ev.target.value) : 0)
+  })
+
+  // containerStyle={{ height: "100vh", width: "100%" }}>
+  // for a map with mobile measurements
   render() {
     return (
-
-      <ReactMapboxGl
-        style={this.state.style}
-        accessToken={accessToken}
-        onClick={this.onMapClick.bind(this)}
-        center={this.state.center}
-        movingMethod="jumpTo"
-        pitch={this.state.pitch}
-        containerStyle={{ height: "100vh", width: "100%" }}>
-
-        <Button style={{position:'absolute',zIndex:1,bottom:0}} onClick={ ()=> this.setState({ open: !this.state.open })}>
+      <div>
+      <Button style={{position:'absolute',zIndex:1,bottom:0}} onClick={ ()=> this.setState({ open: !this.state.open })}>
           Toggle Editor
         </Button>
         <Panel collapsible expanded={this.state.open} style={{position:'absolute',zIndex:1,margin:0}}>
@@ -121,11 +131,17 @@ export default class GeoJSONMap extends Component {
                 value={this.state.lineWidth}
                 onChange={this.changeWidth}
               />
-              <ControlLabel>Marker Radius: {this.state.radius}</ControlLabel>
+              <ControlLabel>Marker Radius: {this.state.markerRadius} => {this.state.filteredFeatures.length}</ControlLabel>
               <FormControl
                 type="range"
-                value={this.state.radius}
-                onChange={this.changeRadius.bind(this)}
+                value={this.state.markerRadius}
+                onChange={this.changeMarkerRadius.bind(this)}
+              />
+              <ControlLabel>Circles Radius: {this.state.circlesRadius}</ControlLabel>
+              <FormControl
+                type="range"
+                value={this.state.circlesRadius}
+                onChange={this.changeCirclesRadius.bind(this)}
               />
               <FormControl
                 type="color"
@@ -136,10 +152,29 @@ export default class GeoJSONMap extends Component {
                 type="color"
                 value={this.state.color_1}
                 onChange={this.changeColor1}
-              />              
+              />
+              <FormControl
+                type="color"
+                value={this.state.color_2}
+                onChange={this.changeColor2}
+              />
+              <FormControl
+                type="color"
+                value={this.state.color_3}
+                onChange={this.changeColor3}
+              />       
             </FormGroup>
           </form>
         </Panel>
+
+      <ReactMapboxGl
+        style={this.state.style}
+        accessToken={accessToken}
+        onClick={this.onMapClick.bind(this)}
+        center={this.state.center}
+        movingMethod="jumpTo"
+        pitch={this.state.pitch}
+        containerStyle={{ height: "100vh", width: "100%" }}>
 
         { this.state.geojson &&
         <GeoJSONLayer
@@ -172,16 +207,27 @@ export default class GeoJSONMap extends Component {
           }}
           />
         }
+
         <Layer
-          type="symbol"
-          id="marker"
-          layout={{ "icon-image": iconImage }}>
+          type="circle"
+          id="postcode-marker"
+          paint={{
+            "circle-radius": this.state.circlesRadius,
+            "circle-opacity": 0.8,
+            "circle-color": {
+              "property": "random",
+              "stops": [
+                [0, this.state.color_0],
+                [1, this.state.color_1]
+              ]
+            },
+          }}>
           {
-            this.state.markers
-              .map((marker, index) => (
+            this.state.filteredFeatures
+              .map((feat, index) => (
                 <Feature
                   key={index}
-                  coordinates={marker}/>
+                  coordinates={feat.coordinates}/>
               ))
           }
         </Layer>
@@ -204,6 +250,7 @@ export default class GeoJSONMap extends Component {
 
 
       </ReactMapboxGl>
+      </div>
     );
   }
 }
