@@ -352,7 +352,7 @@ export default class GeoJSONMap extends Component {
 
 
           <Marker
-            offset="33px"
+            offset="35px"
             coordinates={this.state.personCoords}
             anchor="bottom">
             <img className="img-circle"
