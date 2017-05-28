@@ -12,7 +12,7 @@ const PITCHED_FITBOUNDSOPTIONS = {
   padding: 30,
   offset: [0,-130],
   linear: false,
-  duration: 1000,
+  duration: 1000,  // speed of panning animation
 }
 
 const NONPITCHED_FITBOUNDSOPTIONS = {
@@ -20,7 +20,7 @@ const NONPITCHED_FITBOUNDSOPTIONS = {
   padding: 80,
   offset: [0,-170],
   linear: false,
-  duration: 1000,
+  duration: 1000,  // speed of panning animation
 }
 
 const ANIMATION_TYPE_FROM_ORIGIN_OUTWARDS = 1
@@ -270,6 +270,28 @@ export default class GeoJSONMap extends Component {
     return (
       <div style={mobileContainerStyle}>
         <Panel style={bottomPanelStyle}>
+        <h3>
+          Hi there!
+        </h3>
+        <p>
+          <b>Click around above to change the position of the person bubble, zoom out to find a nice spot for it.</b>
+        </p>
+        <p>
+          You'll see the amount of possible people around you (and they'll animate slightly).
+        </p>
+        <hr/>
+        <p>
+          There are quite some settings to adjust in the code:
+        </p>
+        <p>
+          <li>The colors</li>
+          <li>The style of the map</li>
+          <li>The animation type and speed</li>
+          <li>The radius for the shown markers/ routes.</li>
+          <li>The initial starting point of the person bubble</li>
+          <li>The speed of the panning animation</li>
+          <li>You can even Pitch the map</li>
+        </p>
           {/*
           <form>
             <FormGroup>
