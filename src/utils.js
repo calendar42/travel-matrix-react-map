@@ -23,3 +23,17 @@ export function haversineDistance (coords1, coords2) {
 
   return d;
 }
+
+
+const colors = [
+  "rgb(52,128,247)",
+  "rgb(235,85,62)",
+  "rgb(131,186,64)",
+  "rgb(252,175,30)",
+  "rgb(80,45,132)",
+  "rgb(0,171,163)",
+];
+
+export function getRandomColor () {
+  return colors[Math.floor(Math.random() * colors.length)];
+}
