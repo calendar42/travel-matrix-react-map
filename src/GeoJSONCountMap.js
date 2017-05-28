@@ -71,6 +71,10 @@ const fitBoundsOptions = {
 }
 
 export default class GeoJSONMap extends Component {
+  /*
+    FYI:
+      componentDidMount() --callback--> setFilteredFeatures() --callback--> setmapBounds()
+  */
   constructor(props) {
     super(props);
     this.state = {
@@ -229,7 +233,7 @@ export default class GeoJSONMap extends Component {
                 "type":"identity",
               },
               "circle-opacity": 1,
-              "circle-radius": this.state.markerRadius
+              "circle-radius": 20
             }}
           />
           }
