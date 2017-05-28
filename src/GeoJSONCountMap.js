@@ -72,7 +72,8 @@ const fitBoundsOptions = {
   // When setting pitch to 60:
   // padding: 30,
   // offset: [0,-130],
-  linear: false
+  linear: false,
+  duration: 1000,
 }
 
 export default class GeoJSONMap extends Component {
@@ -84,10 +85,11 @@ export default class GeoJSONMap extends Component {
     super(props);
     this.state = {
       center: center,
+      bearing: 0,
+      pitch:0,
       routeGeojson: routeGeojson,
       markerGeojson: markerGeojson,
       lineWidth: 6,
-      pitch:0,
       bounds: [EVENT_COORDS, PERSON_COORDS],  // initiate with preset bounding box
       eventCoords: EVENT_COORDS,
       personCoords: PERSON_COORDS,
@@ -99,7 +101,7 @@ export default class GeoJSONMap extends Component {
 
   componentDidMount() {
     this.setFilteredFeatures();
-  }  
+  }
 
   onMapClick(map, event) {
     this.setState({
@@ -149,13 +151,15 @@ export default class GeoJSONMap extends Component {
     */
     geojson = JSON.parse(JSON.stringify(geojson))  // deepcopy
     geojson["features"] = geojson["features"].filter(function(feature){
+      let distance = Infinity;
       if (feature.geometry.type === "Point") {
-        return haversineDistance(feature.geometry.coordinates, originCoords) < radius;  
+        distance = haversineDistance(feature.geometry.coordinates, originCoords);
       }
       if (feature.geometry.type === "LineString") {
-       return haversineDistance(feature.geometry.coordinates[0], originCoords) < radius;   
+        distance = haversineDistance(feature.geometry.coordinates[0], originCoords);
       }
-      return false;
+      feature['properties']['distance'] = distance;
+      return distance < radius;
     });
     return geojson
   }
@@ -168,6 +172,10 @@ export default class GeoJSONMap extends Component {
     pitch: (ev.target.value ? parseFloat(ev.target.value) : 0)
   })
 
+  changeBearing = ev => this.setState({
+    bearing: (ev.target.value ? parseFloat(ev.target.value) : 0)
+  })
+
   render() {
     return (
       <div style={mobileContainerStyle}>
@@ -178,6 +186,11 @@ export default class GeoJSONMap extends Component {
               <FormControl type="range"
                 value={this.state.pitch}
                 onChange={this.changePitch}
+              />
+              <ControlLabel>Map Bearing: {this.state.bearing}</ControlLabel>
+              <FormControl type="range"
+                value={this.state.bearing}
+                onChange={this.changeBearing}
               />
               <ControlLabel>Line width: {this.state.lineWidth}</ControlLabel>
               <FormControl type="range"
@@ -195,6 +208,7 @@ export default class GeoJSONMap extends Component {
           center={this.state.center}
           movingMethod="jumpTo"
           pitch={this.state.pitch}
+          bearing={this.state.bearing}
           fitBounds={this.state.bounds}
           fitBoundsOptions={fitBoundsOptions}
           containerStyle={{ height: "100%", width: "100%" }}>
@@ -230,15 +244,24 @@ export default class GeoJSONMap extends Component {
                 "type":"identity",
               },
               "circle-opacity": 1,
-              "circle-radius": 20
+              "circle-radius": {
+                property: "distance",
+                type: "interval",
+                stops: [
+                  [0, 35],
+                  [2, 20],
+                  [5, 15],
+                  [7, 10],
+                ]
+              }
             }}
           />
           }
 
 
           <Marker
+            offset="33px"
             coordinates={this.state.personCoords}
-            offset="35"
             anchor="bottom">
             <img className="img-circle"
               style={{width:"70px", height:"70px"}}
@@ -247,7 +270,6 @@ export default class GeoJSONMap extends Component {
 
           <Marker
             coordinates={this.state.eventCoords}
-            offset="45"
             anchor="bottom">
             <img className="img-circle"
               style={{width:"90px", height:"90px"}}
