@@ -64,9 +64,14 @@ const bottomPanelStyle = {
   height:"55%"
 }
 
+/* These options require some triggery depending on pitch */
 const fitBoundsOptions = {
-  padding: 30,
-  offset: [0,-130],
+  // When setting pitch to 0:
+  padding: 80,
+  offset: [0,-170],
+  // When setting pitch to 60:
+  // padding: 30,
+  // offset: [0,-130],
   linear: false
 }
 
@@ -82,8 +87,7 @@ export default class GeoJSONMap extends Component {
       routeGeojson: routeGeojson,
       markerGeojson: markerGeojson,
       lineWidth: 6,
-      markerRadius:20,
-      pitch:60,
+      pitch:0,
       bounds: [EVENT_COORDS, PERSON_COORDS],  // initiate with preset bounding box
       eventCoords: EVENT_COORDS,
       personCoords: PERSON_COORDS,
@@ -104,16 +108,20 @@ export default class GeoJSONMap extends Component {
   }
 
   setFilteredFeatures() {
+    let distance = haversineDistance(this.state.eventCoords, this.state.personCoords);
+    let markerRadius = (distance/4);
+    let routeRadius = (distance/3);
+
     this.setState({
       "routeGeojson": this.geojsonFilter(
         routeGeojson,
         this.state.eventCoords,
-        this.state.markerRadius
+        routeRadius
       ),
       "markerGeojson": this.geojsonFilter(
         markerGeojson,
         this.state.personCoords,
-        this.state.markerRadius
+        markerRadius
       )
     }, this.setmapBounds);
   }
@@ -135,7 +143,7 @@ export default class GeoJSONMap extends Component {
     })
   }
 
-  geojsonFilter = function (geojson, originCoords, radius) {
+  geojsonFilter(geojson, originCoords, radius) {
     /*
       Returns copied instance of geojson, with features filtered by radius from originCoords
     */
@@ -160,12 +168,6 @@ export default class GeoJSONMap extends Component {
     pitch: (ev.target.value ? parseFloat(ev.target.value) : 0)
   })
 
-  changeMarkerRadius(event) {
-    this.setState({
-      markerRadius: parseInt(event.target.value)
-    },this.setFilteredFeatures);
-  }
-
   render() {
     return (
       <div style={mobileContainerStyle}>
@@ -181,11 +183,6 @@ export default class GeoJSONMap extends Component {
               <FormControl type="range"
                 value={this.state.lineWidth}
                 onChange={this.changeWidth}
-              />
-              <ControlLabel>Marker Radius: {this.state.markerRadius}</ControlLabel>
-              <FormControl type="range"
-                value={this.state.markerRadius}
-                onChange={this.changeMarkerRadius.bind(this)}
               />
             </FormGroup>
           </form>
