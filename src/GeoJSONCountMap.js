@@ -7,6 +7,8 @@ import points from "./data/points.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 const { accessToken, center } = config;
 
+const EVENT_COORDS = [4.4881837,51.882791];
+const PERSON_COORDS = [4.53,52.22];
 
 /* 
   Prepare GeoJSON data
@@ -63,9 +65,8 @@ const bottomPanelStyle = {
 }
 
 const fitBoundsOptions = {
-  // padding: {bottom: "300px"},
-  offset: [0,-200],
-  padding:60,
+  padding: 30,
+  offset: [0,-130],
   linear: false
 }
 
@@ -79,9 +80,9 @@ export default class GeoJSONMap extends Component {
       lineWidth: 6,
       markerRadius:20,
       pitch:60,
-      bounds: [[4.4881837,51.882791],[4.53,52.22]],
-      eventCoords: [4.4881837,51.882791],
-      personCoords: [4.53,52.22],
+      bounds: [EVENT_COORDS, PERSON_COORDS],  // initiate with preset bounding box
+      eventCoords: EVENT_COORDS,
+      personCoords: PERSON_COORDS,
       personUrl:"//avatars3.githubusercontent.com/u/452291?v=3&s=460",
       destinationUrl:"./destination.png",
       open: true,
@@ -114,14 +115,25 @@ export default class GeoJSONMap extends Component {
   }
 
   setmapBounds() {
+    /*
+      Create bounding box based on the eventCoords and personCoords and setState
+    */
+    let c1 = this.state.eventCoords;
+    let c2 = this.state.personCoords;
+    let bounds = [
+      c1[0] < c2[0] ? c1[0] : c2[0],
+      c1[1] < c2[1] ? c1[1] : c2[1],
+      c1[0] > c2[0] ? c1[0] : c2[0],
+      c1[1] > c2[1] ? c1[1] : c2[1],
+    ];
     this.setState({
-      bounds: [this.state.eventCoords, this.state.personCoords]
+      bounds: bounds
     })
   }
 
   geojsonFilter = function (geojson, originCoords, radius) {
     /*
-      Returns new instance of geojson, with features filtered by radius from originCoords
+      Returns copied instance of geojson, with features filtered by radius from originCoords
     */
     geojson = JSON.parse(JSON.stringify(geojson))  // deepcopy
     geojson["features"] = geojson["features"].filter(function(feature){
