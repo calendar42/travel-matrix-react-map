@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import ReactMapboxGl, { Popup, Layer, Marker, Feature, GeoJSONLayer, ScaleControl, ZoomControl } from "react-mapbox-gl";
+import ReactMapboxGl, { Marker, GeoJSONLayer } from "react-mapbox-gl";
 import config from "./config.json";
 import {haversineDistance, getRandomColor} from "./utils.js";
 import routeGeojson from "./data/geojson_filtered_gt_5.json";
@@ -62,6 +62,13 @@ const bottomPanelStyle = {
   height:"55%"
 }
 
+const fitBoundsOptions = {
+  // padding: {bottom: "300px"},
+  offset: [0,-200],
+  padding:60,
+  linear: false
+}
+
 export default class GeoJSONMap extends Component {
   constructor(props) {
     super(props);
@@ -72,6 +79,7 @@ export default class GeoJSONMap extends Component {
       lineWidth: 6,
       markerRadius:20,
       pitch:60,
+      bounds: [[4.4881837,51.882791],[4.53,52.22]],
       eventCoords: [4.4881837,51.882791],
       personCoords: [4.53,52.22],
       personUrl:"//avatars3.githubusercontent.com/u/452291?v=3&s=460",
@@ -106,7 +114,9 @@ export default class GeoJSONMap extends Component {
   }
 
   setmapBounds() {
-    console.log("implement setmapBounds");
+    this.setState({
+      bounds: [this.state.eventCoords, this.state.personCoords]
+    })
   }
 
   geojsonFilter = function (geojson, originCoords, radius) {
@@ -143,7 +153,7 @@ export default class GeoJSONMap extends Component {
   render() {
     return (
       <div style={mobileContainerStyle}>
-        <Panel collapsible expanded="true" style={bottomPanelStyle}>
+        <Panel style={bottomPanelStyle}>
           <form>
             <FormGroup>
               <ControlLabel>Map Pitch: {this.state.pitch}</ControlLabel>
@@ -172,6 +182,8 @@ export default class GeoJSONMap extends Component {
           center={this.state.center}
           movingMethod="jumpTo"
           pitch={this.state.pitch}
+          fitBounds={this.state.bounds}
+          fitBoundsOptions={fitBoundsOptions}
           containerStyle={{ height: "100%", width: "100%" }}>
 
           { this.state.routeGeojson &&

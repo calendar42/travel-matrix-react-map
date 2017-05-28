@@ -2,7 +2,6 @@
 import React, { Component } from 'react';
 // import GeoJSONMap from "./GeoJSONMap.js";
 import GeoJSONMap from "./GeoJSONCountMap.js";
-import logo from './logo.svg';
 import './App.css';
 
 
