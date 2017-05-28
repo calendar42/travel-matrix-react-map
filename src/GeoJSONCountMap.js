@@ -277,7 +277,7 @@ export default class GeoJSONMap extends Component {
           <b>Click around above to change the position of the person bubble, zoom out to find a nice spot for it.</b>
         </p>
         <p>
-          You'll see the amount of possible people around you (and they'll animate slightly).
+          You'll see the amount of related people around you (and they'll animate slightly).
         </p>
         <hr/>
         <p>
