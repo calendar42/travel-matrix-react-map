@@ -7,8 +7,71 @@ import points from "./data/points.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 const { accessToken, center } = config;
 
+const PITCHED_FITBOUNDSOPTIONS = {
+  _default_pitch: 60,
+  padding: 30,
+  offset: [0,-130],
+  linear: false,
+  duration: 1000,
+}
+
+const NONPITCHED_FITBOUNDSOPTIONS = {
+  _default_pitch: 0,
+  padding: 80,
+  offset: [0,-170],
+  linear: false,
+  duration: 1000,
+}
+
+const ANIMATION_TYPE_FROM_ORIGIN_OUTWARDS = 1
+const ANIMATION_TYPE_BETWEEN_ORIGIN_AND_DESTINATION = 2
+
+
+/*
+  ============================== START SETTINGS ================================
+*/
+
+/*
+  Fit bounds needs different options depending on whether we want the map to be pitched
+*/
+
+const DEFAULT_FITBOUNDSOPTIONS = NONPITCHED_FITBOUNDSOPTIONS;  // NON_PITCHED_FITBOUNDSOPTIONS
+
+/*
+  There are 2 main markers:
+*/
 const EVENT_COORDS = [4.4881837,51.882791];
 const PERSON_COORDS = [4.53,52.22];
+
+/*
+  Animations are simple motions of the markers
+    There are 2 animation types
+*/
+const DEFAULT_ANIMATION_TYPE = ANIMATION_TYPE_FROM_ORIGIN_OUTWARDS;
+const ANIMATION_MOVE_FRACTION = 500;
+const ANIMATION_MOVE_DELAY_MS = 100;
+const ANIMATION_ON = true;
+
+/*
+  The radiuses of the other markers and routes shown are
+    based on the distance between the origin and destination.
+  They are controlled with the numbers below
+*/
+const ROUTE_RADIUS_DISTANCE_FACTOR = 1/2;
+const ROUTE_RADIUS_MAX_KM = 50;
+const MARKER_RADIUS_DISTANCE_FACTOR = 1/4;
+const MARKER_RADIUS_MAX_KM = 20;
+
+
+// const MAP_STYLE = "mapbox://styles/jasperhartong/cj1uzj8xj00092sk9ufhlhuon";  // dark map
+// const MAP_STYLE = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // white map
+const MAP_STYLE = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // 'natural map'
+
+/*
+  ============================== END SETTINGS ================================
+*/
+
+
 
 /* 
   Prepare GeoJSON data
@@ -40,11 +103,8 @@ routeGeojson["features"].map(function(feature){
 
 
 /*
-  Prepare styling of map
+  Map styling
 */
-// const mapStyle = "mapbox://styles/jasperhartong/cj1uzj8xj00092sk9ufhlhuon";  // dark map
-// const mapStyle = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // white map
-const mapStyle = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // 'natural map'
 
 const mobileContainerStyle = {
   position:"relative",
@@ -64,17 +124,6 @@ const bottomPanelStyle = {
   height:"55%"
 }
 
-/* These options require some triggery depending on pitch */
-const fitBoundsOptions = {
-  // When setting pitch to 0:
-  padding: 80,
-  offset: [0,-170],
-  // When setting pitch to 60:
-  // padding: 30,
-  // offset: [0,-130],
-  linear: false,
-  duration: 1000,
-}
 
 export default class GeoJSONMap extends Component {
   /*
@@ -86,10 +135,10 @@ export default class GeoJSONMap extends Component {
     this.state = {
       center: center,
       bearing: 0,
-      pitch:0,
+      pitch:DEFAULT_FITBOUNDSOPTIONS._default_pitch,
       routeGeojson: routeGeojson,
       markerGeojson: markerGeojson,
-      lineWidth: 6,
+      lineWidth: 3,
       bounds: [EVENT_COORDS, PERSON_COORDS],  // initiate with preset bounding box
       eventCoords: EVENT_COORDS,
       personCoords: PERSON_COORDS,
@@ -101,6 +150,7 @@ export default class GeoJSONMap extends Component {
 
   componentDidMount() {
     this.setFilteredFeatures();
+    this.animate()
   }
 
   onMapClick(map, event) {
@@ -111,8 +161,8 @@ export default class GeoJSONMap extends Component {
 
   setFilteredFeatures() {
     let distance = haversineDistance(this.state.eventCoords, this.state.personCoords);
-    let markerRadius = (distance/4);
-    let routeRadius = (distance/3);
+    let markerRadius = Math.min((distance*MARKER_RADIUS_DISTANCE_FACTOR),MARKER_RADIUS_MAX_KM);
+    let routeRadius = Math.min((distance*ROUTE_RADIUS_DISTANCE_FACTOR),ROUTE_RADIUS_MAX_KM);
 
     this.setState({
       "routeGeojson": this.geojsonFilter(
@@ -128,12 +178,52 @@ export default class GeoJSONMap extends Component {
     }, this.setmapBounds);
   }
 
+  animate() {
+    if (!ANIMATION_ON) {
+      return false;
+    }
+    let self = this;
+
+    const getMove = function (coordinates, type) {
+      const origin = self.state.personCoords;
+      const destination = self.state.eventCoords;
+      const random = Math.random()
+      if (type === ANIMATION_TYPE_BETWEEN_ORIGIN_AND_DESTINATION) {
+        return [
+          coordinates[0] - ((origin[0] - destination[0])/ANIMATION_MOVE_FRACTION*random),
+          coordinates[1] - ((origin[1] - destination[1])/ANIMATION_MOVE_FRACTION*random),
+        ]
+      }
+      if (type === ANIMATION_TYPE_FROM_ORIGIN_OUTWARDS) {
+        return [
+          coordinates[0] - ((origin[0] - coordinates[0])/ANIMATION_MOVE_FRACTION*random),
+          coordinates[1] - ((origin[1] - coordinates[1])/ANIMATION_MOVE_FRACTION*random),
+        ]
+      }
+    };
+
+    requestAnimationFrame(
+      function(){
+        let geojson = JSON.parse(JSON.stringify(self.state.markerGeojson))  // deepcopy
+        geojson["features"] = self.state.markerGeojson["features"].map(function (feature) {
+          feature.geometry.coordinates = getMove(feature.geometry.coordinates, DEFAULT_ANIMATION_TYPE);
+          return feature
+        });
+        self.setState({
+          "markerGeojson": geojson
+        });
+        setTimeout(function() {
+          self.animate()
+        }, ANIMATION_MOVE_DELAY_MS);
+      })
+  }
+
   setmapBounds() {
     /*
       Create bounding box based on the eventCoords and personCoords and setState
     */
-    let c1 = this.state.eventCoords;
-    let c2 = this.state.personCoords;
+    const c1 = this.state.eventCoords;
+    const c2 = this.state.personCoords;
     let bounds = [
       c1[0] < c2[0] ? c1[0] : c2[0],
       c1[1] < c2[1] ? c1[1] : c2[1],
@@ -158,7 +248,7 @@ export default class GeoJSONMap extends Component {
       if (feature.geometry.type === "LineString") {
         distance = haversineDistance(feature.geometry.coordinates[0], originCoords);
       }
-      feature['properties']['distance'] = distance;
+      feature["properties"]["distance"] = distance;
       return distance < radius;
     });
     return geojson
@@ -180,6 +270,7 @@ export default class GeoJSONMap extends Component {
     return (
       <div style={mobileContainerStyle}>
         <Panel style={bottomPanelStyle}>
+          {/*
           <form>
             <FormGroup>
               <ControlLabel>Map Pitch: {this.state.pitch}</ControlLabel>
@@ -199,10 +290,11 @@ export default class GeoJSONMap extends Component {
               />
             </FormGroup>
           </form>
+          */}
         </Panel>
 
         <ReactMapboxGl
-          style={mapStyle}
+          style={MAP_STYLE}
           accessToken={accessToken}
           onClick={this.onMapClick.bind(this)}
           center={this.state.center}
@@ -210,7 +302,7 @@ export default class GeoJSONMap extends Component {
           pitch={this.state.pitch}
           bearing={this.state.bearing}
           fitBounds={this.state.bounds}
-          fitBoundsOptions={fitBoundsOptions}
+          fitBoundsOptions={DEFAULT_FITBOUNDSOPTIONS}
           containerStyle={{ height: "100%", width: "100%" }}>
 
           { this.state.routeGeojson &&
