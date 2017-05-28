@@ -40,8 +40,8 @@ const DEFAULT_FITBOUNDSOPTIONS = NONPITCHED_FITBOUNDSOPTIONS;  // NON_PITCHED_FI
 /*
   There are 2 main markers:
 */
-const EVENT_COORDS = [4.4881837,51.882791];
-const PERSON_COORDS = [4.53,52.22];
+const DESTINATION_COORDS = [4.4881837,51.882791];
+const ORIGIN_COORDS = [4.53,52.22];
 
 /*
   Animations are simple motions of the markers
@@ -139,11 +139,11 @@ export default class GeoJSONMap extends Component {
       routeGeojson: routeGeojson,
       markerGeojson: markerGeojson,
       lineWidth: 3,
-      bounds: [EVENT_COORDS, PERSON_COORDS],  // initiate with preset bounding box
-      eventCoords: EVENT_COORDS,
-      personCoords: PERSON_COORDS,
-      personUrl:"//avatars3.githubusercontent.com/u/452291?v=3&s=460",
-      destinationUrl:"./destination.png",
+      bounds: [DESTINATION_COORDS, ORIGIN_COORDS],  // initiate with preset bounding box
+      destinationCoords: DESTINATION_COORDS,
+      originCoords: ORIGIN_COORDS,
+      originSrcUrl:"//avatars3.githubusercontent.com/u/452291?v=3&s=460",
+      destinationSrcUrl:"./destination.png",
       open: true,
     };
   }
@@ -155,24 +155,24 @@ export default class GeoJSONMap extends Component {
 
   onMapClick(map, event) {
     this.setState({
-      personCoords: event.lngLat.toArray(),
+      originCoords: event.lngLat.toArray(),
     },this.setFilteredFeatures);
   }
 
   setFilteredFeatures() {
-    let distance = haversineDistance(this.state.eventCoords, this.state.personCoords);
+    let distance = haversineDistance(this.state.destinationCoords, this.state.originCoords);
     let markerRadius = Math.min((distance*MARKER_RADIUS_DISTANCE_FACTOR),MARKER_RADIUS_MAX_KM);
     let routeRadius = Math.min((distance*ROUTE_RADIUS_DISTANCE_FACTOR),ROUTE_RADIUS_MAX_KM);
 
     this.setState({
       "routeGeojson": this.geojsonFilter(
         routeGeojson,
-        this.state.eventCoords,
+        this.state.destinationCoords,
         routeRadius
       ),
       "markerGeojson": this.geojsonFilter(
         markerGeojson,
-        this.state.personCoords,
+        this.state.originCoords,
         markerRadius
       )
     }, this.setmapBounds);
@@ -185,8 +185,8 @@ export default class GeoJSONMap extends Component {
     let self = this;
 
     const getMove = function (coordinates, type) {
-      const origin = self.state.personCoords;
-      const destination = self.state.eventCoords;
+      const origin = self.state.originCoords;
+      const destination = self.state.destinationCoords;
       const random = Math.random()
       if (type === ANIMATION_TYPE_BETWEEN_ORIGIN_AND_DESTINATION) {
         return [
@@ -220,10 +220,10 @@ export default class GeoJSONMap extends Component {
 
   setmapBounds() {
     /*
-      Create bounding box based on the eventCoords and personCoords and setState
+      Create bounding box based on the destinationCoords and originCoords and setState
     */
-    const c1 = this.state.eventCoords;
-    const c2 = this.state.personCoords;
+    const c1 = this.state.destinationCoords;
+    const c2 = this.state.originCoords;
     let bounds = [
       c1[0] < c2[0] ? c1[0] : c2[0],
       c1[1] < c2[1] ? c1[1] : c2[1],
@@ -353,19 +353,19 @@ export default class GeoJSONMap extends Component {
 
           <Marker
             offset="35px"
-            coordinates={this.state.personCoords}
+            coordinates={this.state.originCoords}
             anchor="bottom">
             <img className="img-circle"
               style={{width:"70px", height:"70px"}}
-              src={this.state.personUrl}/>
+              src={this.state.originSrcUrl}/>
           </Marker>
 
           <Marker
-            coordinates={this.state.eventCoords}
+            coordinates={this.state.destinationCoords}
             anchor="bottom">
             <img className="img-circle"
               style={{width:"90px", height:"90px"}}
-              src={this.state.destinationUrl}/>
+              src={this.state.destinationSrcUrl}/>
           </Marker>
           
         </ReactMapboxGl>
