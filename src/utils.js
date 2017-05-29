@@ -26,12 +26,12 @@ export function haversineDistance (coords1, coords2) {
 
 
 const colors = [
-  "rgb(52,128,247)",
-  "rgb(235,85,62)",
-  "rgb(131,186,64)",
-  "rgb(252,175,30)",
-  "rgb(80,45,132)",
-  "rgb(0,171,163)",
+  "rgb(52,128,247)",  // blue
+  "rgb(235,85,62)",  // red
+  "rgb(131,186,64)",  // green
+  "rgb(252,175,30)",  // orange
+  "rgb(80,45,132)",  // purple
+  "rgb(0,171,163)",  // Green-blue
 ];
 
 export function getRandomColor () {

@@ -49,8 +49,8 @@ const ORIGIN_COORDS = [4.53,52.22];
 */
 const DEFAULT_ANIMATION_TYPE = ANIMATION_TYPE_FROM_ORIGIN_OUTWARDS;
 const ANIMATION_MOVE_FRACTION = 500;
-const ANIMATION_MOVE_DELAY_MS = 100;
-const ANIMATION_ON = true;
+const ANIMATION_MOVE_DELAY_MS = 400;
+const ANIMATION_ON = false;
 
 /*
   The radiuses of the other markers and routes shown are
@@ -62,10 +62,11 @@ const ROUTE_RADIUS_MAX_KM = 50;
 const MARKER_RADIUS_DISTANCE_FACTOR = 1/4;
 const MARKER_RADIUS_MAX_KM = 20;
 
-
+// const MAP_STYLE = "mapbox://styles/mapbox/dark-v9"
+const MAP_STYLE = "mapbox://styles/jasperhartong/cj3a0w0hu00012rpet2mtv7h7"
 // const MAP_STYLE = "mapbox://styles/jasperhartong/cj1uzj8xj00092sk9ufhlhuon";  // dark map
 // const MAP_STYLE = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // white map
-const MAP_STYLE = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // 'natural map'
+// const MAP_STYLE = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // 'natural map'
 
 /*
   ============================== END SETTINGS ================================
@@ -160,20 +161,26 @@ export default class GeoJSONMap extends Component {
   }
 
   setFilteredFeatures() {
+    /* 
+    This function uses the geojsonFilter to show a certain subset of the data.
+      - This subset can be based on a samplesize (e.g: 0.05 of the data), or based on a radius
+    */
     let distance = haversineDistance(this.state.destinationCoords, this.state.originCoords);
     let markerRadius = Math.min((distance*MARKER_RADIUS_DISTANCE_FACTOR),MARKER_RADIUS_MAX_KM);
     let routeRadius = Math.min((distance*ROUTE_RADIUS_DISTANCE_FACTOR),ROUTE_RADIUS_MAX_KM);
 
     this.setState({
-      "routeGeojson": this.geojsonFilter(
-        routeGeojson,
-        this.state.destinationCoords,
-        routeRadius
-      ),
+      // "routeGeojson": this.geojsonFilter(
+      //   routeGeojson,
+      //   this.state.destinationCoords,
+      //   routeRadius,
+      //   1.0
+      // ),
       "markerGeojson": this.geojsonFilter(
         markerGeojson,
         this.state.originCoords,
-        markerRadius
+        Infinity,
+        0.07
       )
     }, this.setmapBounds);
   }
@@ -235,9 +242,10 @@ export default class GeoJSONMap extends Component {
     })
   }
 
-  geojsonFilter(geojson, originCoords, radius) {
+  geojsonFilter(geojson, originCoords, radius, sampling) {
     /*
       Returns copied instance of geojson, with features filtered by radius from originCoords
+      - sampling allows you to only get a random sampling of the data
     */
     geojson = JSON.parse(JSON.stringify(geojson))  // deepcopy
     geojson["features"] = geojson["features"].filter(function(feature){
@@ -248,8 +256,9 @@ export default class GeoJSONMap extends Component {
       if (feature.geometry.type === "LineString") {
         distance = haversineDistance(feature.geometry.coordinates[0], originCoords);
       }
+
       feature["properties"]["distance"] = distance;
-      return distance < radius;
+      return radius > distance && (Math.random() > (1.0-sampling));
     });
     return geojson
   }
@@ -333,8 +342,15 @@ export default class GeoJSONMap extends Component {
             linePaint= {{
               "line-width": this.state.lineWidth,
               "line-color": {
-                property: "color",
-                type: "identity"
+                property: "count",
+                type: "interval",
+                stops: [
+                  [0, 'rgba(255,255,255,0.1)'],
+                  [200, 'rgba(255,255,255,0.2)'],
+                  [400, 'rgba(255,255,255,0.4)'],
+                  [600, 'rgba(255,255,255,0.5)'],
+                  [1000, 'rgba(255,255,255,1)'],
+                ]
               }
             }}
             lineLayout={{
@@ -353,19 +369,18 @@ export default class GeoJSONMap extends Component {
               "visibility": "visible",
             }}
             circlePaint={{
-              "circle-color": {
-                "property":"color",
-                "type":"identity",
-              },
+              "circle-color": "rgb(0,171,163)",
               "circle-opacity": 1,
               "circle-radius": {
                 property: "distance",
                 type: "interval",
                 stops: [
-                  [0, 35],
-                  [2, 20],
-                  [5, 15],
-                  [7, 10],
+                  [0, 10],
+                  [5, 8],
+                  [10, 7],
+                  [20, 5],
+                  [35, 4],
+                  [40, 2],
                 ]
               }
             }}
