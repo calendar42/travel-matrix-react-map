@@ -109,11 +109,8 @@ routeGeojson["features"].map(function(feature){
 
 const mobileContainerStyle = {
   position:"relative",
-  height: "736px",
-  width: "414px",
-  marginTop:"30px",
-  marginLeft:"calc(50% - 207px)",
-  boxShadow: "0px 0px 10px"
+  height: "100%",
+  width: "100%"
 }
 
 const bottomPanelStyle = {
@@ -122,7 +119,8 @@ const bottomPanelStyle = {
   zIndex:99999,
   margin:"0 10px",
   width:"calc(100% - 20px)",
-  height:"55%"
+  height:"55%",
+  overflow: "auto"
 }
 
 
