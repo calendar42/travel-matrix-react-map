@@ -2,10 +2,13 @@ import React, { Component } from "react";
 import ReactMapboxGl, { Marker, GeoJSONLayer } from "react-mapbox-gl";
 import config from "./config.json";
 import {haversineDistance, getRandomColor} from "./utils.js";
-import routeGeojson from "./data/geojson_filtered_gt_5.json";
+import routePolyjson from "./data/geojson_filtered_gt_5_polyline.json";
+
 import points from "./data/points.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 const { accessToken, center } = config;
+
+import polyliner from "geojson-polyline";
 
 const PITCHED_FITBOUNDSOPTIONS = {
   _default_pitch: 60,
@@ -98,8 +101,10 @@ const markerGeojson = {
   Prepare GeoJSON data
   - Add random colors to route data
 */
+
+let routeGeojson = polyliner.decode(routePolyjson);
 routeGeojson["features"].map(function(feature){
-  feature["properties"]["color"] = getRandomColor()
+  feature["properties"]["color"] = getRandomColor();
 })
 
 
