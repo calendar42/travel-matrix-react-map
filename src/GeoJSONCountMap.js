@@ -65,8 +65,14 @@ const ROUTE_RADIUS_MAX_KM = 50;
 const MARKER_RADIUS_DISTANCE_FACTOR = 1/4;
 const MARKER_RADIUS_MAX_KM = 20;
 
+
+
+// const MAP_STYLE = "mapbox://styles/denniskoks/cirroi8ln004uh0ncgm9s7g8w"
+
+const MAP_STYLE = "mapbox://styles/jasperhartong/cj3pscyt700022rp9ehqpgvbd"
+
 // const MAP_STYLE = "mapbox://styles/mapbox/dark-v9"
-const MAP_STYLE = "mapbox://styles/jasperhartong/cj3a0w0hu00012rpet2mtv7h7"
+// const MAP_STYLE = "mapbox://styles/jasperhartong/cj3a0w0hu00012rpet2mtv7h7"
 // const MAP_STYLE = "mapbox://styles/jasperhartong/cj1uzj8xj00092sk9ufhlhuon";  // dark map
 // const MAP_STYLE = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // white map
 // const MAP_STYLE = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // 'natural map'
@@ -348,11 +354,8 @@ export default class GeoJSONMap extends Component {
                 property: "count",
                 type: "interval",
                 stops: [
-                  [0, 'rgba(255,255,255,0.1)'],
-                  [200, 'rgba(255,255,255,0.2)'],
-                  [400, 'rgba(255,255,255,0.4)'],
-                  [600, 'rgba(255,255,255,0.5)'],
-                  [1000, 'rgba(255,255,255,1)'],
+                  [1000, 'rgba(0,173,165,1)'],
+
                 ]
               }
             }}
@@ -372,17 +375,12 @@ export default class GeoJSONMap extends Component {
               "visibility": "visible",
             }}
             circlePaint={{
-              "circle-color": "rgb(0,171,163)",
+              "circle-color": "rgb(0,173,165)",
               "circle-opacity": 1,
               "circle-radius": {
                 property: "distance",
                 type: "interval",
                 stops: [
-                  [0, 10],
-                  [5, 8],
-                  [10, 7],
-                  [20, 5],
-                  [35, 4],
                   [40, 2],
                 ]
               }
