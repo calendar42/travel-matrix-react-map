@@ -108,7 +108,12 @@ const markerGeojson = {
   - Add random colors to route data
 */
 
-let routeGeojson = polyliner.decode(routePolyjson);
+
+let routeGeojson = routePolyjson;
+if(typeof routePolyjson.features[0].geometry.coordinates === "string"){
+  let routeGeojson = polyliner.decode(routePolyjson);
+}
+
 routeGeojson["features"].map(function(feature){
   feature["properties"]["color"] = getRandomColor();
 })
