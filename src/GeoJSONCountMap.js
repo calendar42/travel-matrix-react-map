@@ -153,7 +153,7 @@ export default class GeoJSONMap extends Component {
       pitch:DEFAULT_FITBOUNDSOPTIONS._default_pitch,
       routeGeojson: routeGeojson,
       markerGeojson: markerGeojson,
-      lineWidth: 3,
+      lineWidth: 1,
       bounds: [DESTINATION_COORDS, ORIGIN_COORDS],  // initiate with preset bounding box
       destinationCoords: DESTINATION_COORDS,
       originCoords: ORIGIN_COORDS,
@@ -359,8 +359,11 @@ export default class GeoJSONMap extends Component {
                 property: "count",
                 type: "interval",
                 stops: [
-                  [1000, 'rgba(0,173,165,1)'],
-
+                  [0, 'rgba(0,173,165,0.2)'],
+                  [200, 'rgba(0,173,165,0.4)'],
+                  [400, 'rgba(0,173,165,0.6)'],   
+                  [600, 'rgba(0,173,165,0.8)'],   
+                  [1000, 'rgba(0,173,165,1)']
                 ]
               }
             }}
