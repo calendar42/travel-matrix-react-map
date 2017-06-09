@@ -110,8 +110,8 @@ const markerGeojson = {
 
 
 let routeGeojson = routePolyjson;
-if(typeof routePolyjson.features[0].geometry.coordinates === "string"){
-  let routeGeojson = polyliner.decode(routePolyjson);
+if(typeof routeGeojson.features[0].geometry.coordinates === "string"){
+  routeGeojson = polyliner.decode(routeGeojson);
 }
 
 routeGeojson["features"].map(function(feature){
