@@ -1,7 +1,7 @@
 // https://github.com/alex3165/react-mapbox-gl
 import React, { Component } from 'react';
 // import GeoJSONMap from "./GeoJSONMap.js";
-import GeoJSONMap from "./GeoJSONCountMap.js";
+import GeoJSONMap from "./FeatureVis.js";
 import './App.css';
 
 

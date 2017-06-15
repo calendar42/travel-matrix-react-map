@@ -6,11 +6,15 @@
     "@turf/turf": "^4.1.0",
     "bootstrap": "^3.3.7",
     "immutable": "^3.8.1",
-    "mapbox-gl":"^0.36.0",
+    "mapbox-gl": "^0.36.0",
+    "raphael": "^2.2.7",
+    "rc-color-picker": "^1.1.5",
     "react": "^15.4.2",
     "react-bootstrap": "^0.30.8",
+    "react-color": "^2.12.1",
     "react-dom": "^15.4.2",
-    "react-mapbox-gl": "^1.4.0"
+    "react-mapbox-gl": "^1.4.0",
+    "react-raphael": "^0.8.5"
   },
   "devDependencies": {
     "react-scripts": "0.9.5"
