@@ -1,5 +1,5 @@
 *.json
-!packages.json
+!package.json
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 
 # dependencies
