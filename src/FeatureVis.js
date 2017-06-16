@@ -164,15 +164,15 @@ export default class GeoJSONMap extends Component {
 
     var featuresList = []
 
-    console.log(self.state.tourism, self.state.amenities, self.state.publicTransport)
+    // console.log(feature.properties.T_sum, feature.properties.A_sum, feature.properties.PT_sum)
+    let tourism = self.state.tourism /100;
+    let amenities = self.state.amenities /100;
+    let publicTransport = self.state.publicTransport /100;
+    // console.log(self.state.tourism, self.state.amenities, self.state.publicTransport)
     geojson["features"] = geojson["features"].filter(function(feature){
       let distance = Infinity;
       
       let pass = false;
-      // console.log(feature.properties.T_sum, feature.properties.A_sum, feature.properties.PT_sum)
-      let tourism = self.state.tourism /100;
-      let amenities = self.state.amenities /100;
-      let publicTransport = self.state.publicTransport /100;
 
       // console.log(feature.properties.A_sum, amenities, feature.properties.A_sum >= amenities);
       // console.log(feature.properties.T_sum, tourism, feature.properties.T_sum >= tourism);
@@ -185,7 +185,7 @@ export default class GeoJSONMap extends Component {
       }
       return false
     });
-    console.log("Done Filtering");
+    // console.log("Done Filtering");
     return geojson
   }
 
@@ -272,10 +272,7 @@ export default class GeoJSONMap extends Component {
             accessToken={accessToken}
             center={this.state.center}
             movingMethod="jumpTo"
-            pitch={this.state.pitch}
             bearing={this.state.bearing}
-            fitBounds={this.state.bounds}
-            fitBoundsOptions={DEFAULT_FITBOUNDSOPTIONS}
             containerStyle={{ height: "100%", width: "100%" }}>
             { this.state.markerGeojson &&
             <GeoJSONLayer
