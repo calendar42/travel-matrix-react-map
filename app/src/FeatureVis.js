@@ -153,8 +153,8 @@ export default class GeoJSONMap extends Component {
   }
 
   filterByBoundingBox(){
-    let boundingTL = [52.385554, 4.838650]
-    let boundingBR = [52.333699, 4.942941];
+    let boundingTL = [100, 0]
+    let boundingBR = [0, 100];
     let points = this.state.markerGeojson;
     let featuresArray = [];
 
@@ -218,7 +218,6 @@ export default class GeoJSONMap extends Component {
       ptSumArray.push(featuresArray[i].properties["PT_sum"]);
       tSumArray.push(featuresArray[i].properties["T_sum"]);
 
-
       if (featuresArray[i].properties["A_sum"] > A_sumMax) {
         A_sumMax = featuresArray[i].properties["A_sum"];
       }
@@ -269,7 +268,7 @@ export default class GeoJSONMap extends Component {
   }
 
   componentDidMount() {
-    // this.filterByBoundingBox();
+    this.filterByBoundingBox();
     this.setFilteredFeatures();
   }
 
@@ -290,25 +289,26 @@ export default class GeoJSONMap extends Component {
     let publicTransport = filterArray[2] /100;
 
     // console.log(self.state.tourism, self.state.amenities, self.state.publicTransport)
-    geojson["features"] = geojson["features"].filter(function(feature){
-
-      let distance = Infinity;
-
-      let pass = false;
-
-      // console.log(feature.properties.A_sum, amenities, feature.properties.A_sum >= amenities);
-      // console.log(feature.properties.T_sum, tourism, feature.properties.T_sum >= tourism);
-      if(
-        feature.properties.T_sum >= tourism &&
-        feature.properties.A_sum >= amenities &&
-        feature.properties.PT_sum >= publicTransport
-        ){
-          // console.log(feature.properties.T_sum, ' ', feature.properties.A_sum, ' ' , feature.properties.PT_sum);
-        return true
+    geojson["features"] = geojson["features"].map(function(feature){
+      let propsSum = 0;
+      if (tourism === 0 && amenities === 0 && publicTransport === 0) {
+        propsSum = (feature.properties.T_sum) + (feature.properties.A_sum) + (feature.properties.PT_sum);
       }
-      return false
+      else{
+        propsSum = (feature.properties.T_sum * tourism) + (feature.properties.A_sum * amenities) + (feature.properties.PT_sum * publicTransport);
+      }
+
+      feature.propsSum = propsSum;
+
+      return feature;
     });
 
+    // sort by value
+    geojson["features"].sort(function (a, b) {
+      return b.propsSum - a.propsSum;
+    });
+
+    geojson["features"] = geojson["features"].slice(0,499);
     // console.log("Done Filtering");
     return geojson
   }

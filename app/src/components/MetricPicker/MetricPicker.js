@@ -21,7 +21,7 @@ class MetricPicker extends Component {
 
   onDrag(color, c) {
     // console.log(color,c)
-    debugger;
+    
 
     function hexToRgb(hex) {
       // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
