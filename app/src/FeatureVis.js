@@ -3,7 +3,7 @@ import ReactMapboxGl, { Marker, GeoJSONLayer, Cluster } from "react-mapbox-gl";
 import config from "./config.json";
 import {haversineDistance, getRandomColor} from "./utils.js";
 // import routeGeojson from "./data/geojson_filtered_gt_5.json";
-import markerGeojson from "./data/less_clustered.json";
+import markerGeojson from "./data/cleared.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 const { accessToken, center } = config;
 
@@ -138,23 +138,23 @@ export default class GeoJSONMap extends Component {
       // pitch:DEFAULT_FITBOUNDSOPTIONS._default_pitch,
       // routeGeojson: routeGeojson,
       markerGeojson: markerGeojson,
+      markerCount: 0,
       lineWidth: 3,
       // bounds: [DESTINATION_COORDS, ORIGIN_COORDS],  // initiate with preset bounding box
       // destinationCoords: DESTINATION_COORDS,
       originCoords: ORIGIN_COORDS,
       open: true,
-      amenities: 90,
+      amenities: 0,
       tourism: 0,
       publicTransport:0
     };
 
     this.filterByBoundingBox = this.filterByBoundingBox.bind(this);
-    this.normaliseData = this.normaliseData.bind(this);
   }
 
   filterByBoundingBox(){
     let boundingTL = [52.385554, 4.838650]
-    let boundingBR = [52.337852, 4.935210];
+    let boundingBR = [52.333699, 4.942941];
     let points = this.state.markerGeojson;
     let featuresArray = [];
 
@@ -168,20 +168,108 @@ export default class GeoJSONMap extends Component {
     }
 
     points["features"] = featuresArray;
+    points = this.removeNulled(points);
+    points = this.normaliseData(points);
 
     this.setState({
       markerGeojson: points,
       filteredMarkerGeoJson: points,
+      markerCount: points.features.length
     })
 
   }
 
-  normaliseData(){
+  removeNulled(geojson){
+    geojson["features"] = geojson["features"].filter(function(feature){
+      if(feature.properties.T_sum && feature.properties.A_sum  && feature.properties.PT_sum){
+        return true
+      }
+      console.log('Some nulled');
+      return false
+    });
 
+    return geojson;
+  }
+
+  normalize(min, max) {
+    var delta = max - min;
+    return function (val) {
+        return (val - min) / delta;
+    };
+  }
+
+  normaliseData(geojson){
+    let A_sumMax = 0;
+    let A_sumMin = 1000;
+    let aSumArray = [];
+
+    let PT_sumMax = 0;
+    let PT_sumMin = 1000;
+    let ptSumArray = [];
+
+    let T_sumMax = 0;
+    let T_sumMin = 1000;
+    let tSumArray = [];
+
+    let featuresArray = geojson["features"]
+    for (var i = 0; i < featuresArray.length; i++) {
+
+      aSumArray.push(featuresArray[i].properties["A_sum"]);
+      ptSumArray.push(featuresArray[i].properties["PT_sum"]);
+      tSumArray.push(featuresArray[i].properties["T_sum"]);
+
+
+      if (featuresArray[i].properties["A_sum"] > A_sumMax) {
+        A_sumMax = featuresArray[i].properties["A_sum"];
+      }
+      if (featuresArray[i].properties["A_sum"] < A_sumMin) {
+        A_sumMin = featuresArray[i].properties["A_sum"];
+      }
+
+      if (featuresArray[i].properties["PT_sum"] > PT_sumMax) {
+        PT_sumMax = featuresArray[i].properties["PT_sum"];
+      }
+      if (featuresArray[i].properties["PT_sum"] < PT_sumMin) {
+        PT_sumMin = featuresArray[i].properties["PT_sum"];
+      }
+
+      if (featuresArray[i].properties["T_sum"] > T_sumMax) {
+        T_sumMax = featuresArray[i].properties["T_sum"];
+      }
+      if (featuresArray[i].properties["T_sum"] < T_sumMin) {
+        T_sumMin = featuresArray[i].properties["T_sum"];
+      }
+
+    }
+
+    aSumArray = aSumArray.map(this.normalize(A_sumMin, A_sumMax));
+    ptSumArray = ptSumArray.map(this.normalize(PT_sumMin, PT_sumMax));
+    tSumArray = tSumArray.map(this.normalize(T_sumMin, T_sumMax));
+
+    for (var i = 0; i < featuresArray.length; i++) {
+
+      featuresArray[i].properties["A_sum"] = aSumArray[i];
+      featuresArray[i].properties["PT_sum"] = ptSumArray[i];
+      featuresArray[i].properties["T_sum"] = tSumArray[i];
+
+    }
+
+    // console.log(aSumArray.map(this.normalize(0, 1)).sort());
+    // console.log(ptSumArray.map(this.normalize(0, 1)).sort());
+    // console.log(tSumArray.map(this.normalize(0, 1)).sort());
+
+    console.log("***** ASUM MAX *****" , A_sumMax);
+    console.log("***** ASUM MIN *****" , A_sumMin);
+    console.log("***** PTSUM MAX *****" , PT_sumMax);
+    console.log("***** PTSUM MIN *****" , PT_sumMin);
+    console.log("***** TSUM MAX *****" , T_sumMax);
+    console.log("***** TSUM MIN *****" , T_sumMin);
+
+    return geojson;
   }
 
   componentDidMount() {
-    this.filterByBoundingBox();
+    // this.filterByBoundingBox();
     this.setFilteredFeatures();
   }
 
@@ -200,8 +288,10 @@ export default class GeoJSONMap extends Component {
     let tourism = filterArray[0] /100;
     let amenities = filterArray[1] /100;
     let publicTransport = filterArray[2] /100;
+
     // console.log(self.state.tourism, self.state.amenities, self.state.publicTransport)
     geojson["features"] = geojson["features"].filter(function(feature){
+
       let distance = Infinity;
 
       let pass = false;
@@ -209,14 +299,16 @@ export default class GeoJSONMap extends Component {
       // console.log(feature.properties.A_sum, amenities, feature.properties.A_sum >= amenities);
       // console.log(feature.properties.T_sum, tourism, feature.properties.T_sum >= tourism);
       if(
-        feature.properties.T_sum >= tourism ||
-        feature.properties.A_sum >= amenities ||
+        feature.properties.T_sum >= tourism &&
+        feature.properties.A_sum >= amenities &&
         feature.properties.PT_sum >= publicTransport
         ){
+          // console.log(feature.properties.T_sum, ' ', feature.properties.A_sum, ' ' , feature.properties.PT_sum);
         return true
       }
       return false
     });
+
     // console.log("Done Filtering");
     return geojson
   }
@@ -226,9 +318,12 @@ export default class GeoJSONMap extends Component {
     This function uses the geojsonFilter to show a certain subset of the data.
       - This subset can be based on a samplesize (e.g: 0.05 of the data), or based on a radius
     */
-    let filteredMarkers = this.geojsonFilter(markerGeojson)
+    let filterArray = [this.state.tourism,this.state.amenities,this.state.publicTransport];
+
+    let filteredMarkers = this.geojsonFilter(filterArray,markerGeojson)
     this.setState({
-      "filteredMarkerGeoJson":filteredMarkers
+      filteredMarkerGeoJson:filteredMarkers,
+      markerCount: filteredMarkers.features.length
     });
   }
 
@@ -236,51 +331,65 @@ export default class GeoJSONMap extends Component {
     let tourism = ev.target.value ? parseFloat(ev.target.value) : 0;
     let amenities = this.state.amenities;
     let publicTransport = this.state.publicTransport;
-    let filterArray = [tourism,amenities,publicTransport];
 
-    let currentMarkers = this.state.markerGeojson;
+    if ((tourism + amenities + publicTransport) <= 100 ) {
+      let filterArray = [tourism,amenities,publicTransport];
 
-    let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
-    this.setState(
-      {
-        tourism: tourism,
-        filteredMarkerGeoJson: filteredMarkers,
-      }
-    );
+      let currentMarkers = this.state.markerGeojson;
+
+      let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
+      this.setState(
+        {
+          tourism: tourism,
+          filteredMarkerGeoJson: filteredMarkers,
+          markerCount: filteredMarkers.features.length
+        }
+      );
+    }
+
+
   }
 
   changeAmenities(ev){
     let amenities = ev.target.value ? parseFloat(ev.target.value) : 0;
     let tourism = this.state.tourism;
     let publicTransport = this.state.publicTransport;
-    let filterArray = [tourism,amenities,publicTransport];
 
-    let currentMarkers = this.state.markerGeojson;
+    if ((tourism + amenities + publicTransport) <= 100 ) {
+      let filterArray = [tourism,amenities,publicTransport];
 
-    let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
-    this.setState(
-      {
-        amenities: amenities,
-        filteredMarkerGeoJson: filteredMarkers,
-      }
-    );
+      let currentMarkers = this.state.markerGeojson;
+
+      let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
+      this.setState(
+        {
+          amenities: amenities,
+          filteredMarkerGeoJson: filteredMarkers,
+          markerCount: filteredMarkers.features.length
+        }
+      );
+    }
   }
 
   changePublicTransport(ev){
     let publicTransport = ev.target.value ? parseFloat(ev.target.value) : 0;
     let amenities = this.state.amenities;
     let tourism = this.state.tourism;
-    let filterArray = [tourism,amenities,publicTransport];
 
-    let currentMarkers = this.state.markerGeojson;
+    if ((tourism + amenities + publicTransport) <= 100 ) {
+      let filterArray = [tourism,amenities,publicTransport];
 
-    let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
-    this.setState(
-      {
-        publicTransport: publicTransport,
-        filteredMarkerGeoJson: filteredMarkers,
-      }
-    );
+      let currentMarkers = this.state.markerGeojson;
+
+      let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
+      this.setState(
+        {
+          publicTransport: publicTransport,
+          filteredMarkerGeoJson: filteredMarkers,
+          markerCount: filteredMarkers.features.length
+        }
+      );
+    }
 
   }
 
@@ -326,6 +435,8 @@ export default class GeoJSONMap extends Component {
 
             </FormGroup>
           </form>
+
+          {this.state.markerCount}
         </Panel>
         }
         {
