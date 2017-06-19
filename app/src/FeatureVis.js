@@ -138,7 +138,6 @@ export default class GeoJSONMap extends Component {
       // pitch:DEFAULT_FITBOUNDSOPTIONS._default_pitch,
       // routeGeojson: routeGeojson,
       markerGeojson: markerGeojson,
-      filteredMarkerGeoJson: markerGeojson,
       lineWidth: 3,
       // bounds: [DESTINATION_COORDS, ORIGIN_COORDS],  // initiate with preset bounding box
       // destinationCoords: DESTINATION_COORDS,
@@ -150,6 +149,7 @@ export default class GeoJSONMap extends Component {
     };
 
     this.filterByBoundingBox = this.filterByBoundingBox.bind(this);
+    this.normaliseData = this.normaliseData.bind(this);
   }
 
   filterByBoundingBox(){
@@ -171,7 +171,12 @@ export default class GeoJSONMap extends Component {
 
     this.setState({
       markerGeojson: points,
+      filteredMarkerGeoJson: points,
     })
+
+  }
+
+  normaliseData(){
 
   }
 
