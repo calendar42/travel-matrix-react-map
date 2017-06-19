@@ -5,6 +5,8 @@ import {haversineDistance, getRandomColor} from "./utils.js";
 // import routeGeojson from "./data/geojson_filtered_gt_5.json";
 import markerGeojson from "./data/cleared.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
+import turf from "@turf/turf";
+
 const { accessToken, center } = config;
 
 // import MetricPicker from "./components/MetricPicker/MetricPicker";
@@ -149,6 +151,20 @@ export default class GeoJSONMap extends Component {
       publicTransport:0
     };
 
+
+    let pt = turf.point([-77, 44]);
+    let poly = turf.polygon([[
+      [-81, 41],
+      [-81, 47],
+      [-72, 47],
+      [-72, 41],
+      [-81, 41]
+    ]]);
+
+    let isInside = turf.inside(pt, poly);
+    console.log(isInside);
+
+    
     this.filterByBoundingBox = this.filterByBoundingBox.bind(this);
   }
 
