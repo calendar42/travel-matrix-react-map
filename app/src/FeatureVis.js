@@ -3,11 +3,11 @@ import ReactMapboxGl, { Marker, GeoJSONLayer, Cluster } from "react-mapbox-gl";
 import config from "./config.json";
 import {haversineDistance, getRandomColor} from "./utils.js";
 // import routeGeojson from "./data/geojson_filtered_gt_5.json";
-import markerGeojson from "./data/clustered.json";
+import markerGeojson from "./data/less_clustered.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 const { accessToken, center } = config;
 
-import MetricPicker from "./components/MetricPicker/MetricPicker";
+// import MetricPicker from "./components/MetricPicker/MetricPicker";
 
 const PITCHED_FITBOUNDSOPTIONS = {
   _default_pitch: 60,
@@ -76,7 +76,7 @@ const MAP_STYLE = "mapbox://styles/jasperhartong/cj1uzj8xj00092sk9ufhlhuon";  //
 
 
 
-/* 
+/*
   Prepare GeoJSON data
   - Transform array of latlons to geoJSON features with random colors
 */
@@ -96,7 +96,7 @@ const MAP_STYLE = "mapbox://styles/jasperhartong/cj1uzj8xj00092sk9ufhlhuon";  //
 //   })
 // };
 
-/* 
+/*
   Prepare GeoJSON data
   - Add random colors to route data
 */
@@ -147,9 +147,35 @@ export default class GeoJSONMap extends Component {
       tourism: 0,
       publicTransport:0
     };
+
+    this.filterByBoundingBox = this.filterByBoundingBox.bind(this);
+  }
+
+  filterByBoundingBox(){
+    let boundingTL = [52.400443, 4.779117]
+    let boundingBR = [52.337852, 4.935210];
+    let points = this.state.markerGeojson;
+    let featuresArray = [];
+
+    for (var i = 0; i < points.features.length; i++) {
+      let lon = points.features[i].geometry.coordinates[0];
+      let lat = points.features[i].geometry.coordinates[1];
+
+      if (lat < boundingTL[0] && lat > boundingBR[0] && lon > boundingTL[1] && lon < boundingBR[1]) {
+        featuresArray.push(points.features[i]);
+      }
+    }
+
+    points["features"] = featuresArray;
+
+    this.setState({
+      markerGeojson: points,
+    })
+
   }
 
   componentDidMount() {
+    this.filterByBoundingBox();
     this.setFilteredFeatures();
   }
 
@@ -171,7 +197,7 @@ export default class GeoJSONMap extends Component {
     // console.log(self.state.tourism, self.state.amenities, self.state.publicTransport)
     geojson["features"] = geojson["features"].filter(function(feature){
       let distance = Infinity;
-      
+
       let pass = false;
 
       // console.log(feature.properties.A_sum, amenities, feature.properties.A_sum >= amenities);
@@ -190,11 +216,11 @@ export default class GeoJSONMap extends Component {
   }
 
   setFilteredFeatures() {
-    /* 
+    /*
     This function uses the geojsonFilter to show a certain subset of the data.
       - This subset can be based on a samplesize (e.g: 0.05 of the data), or based on a radius
     */
-    
+
     this.setState({
       "markerGeojson": this.geojsonFilter(
         markerGeojson
@@ -236,7 +262,7 @@ export default class GeoJSONMap extends Component {
         <div style={mobileContainerStyle}>
         <div id="triangle"></div>
         {
-          /* 
+          /*
             <MetricPicker />
           */
         }
@@ -244,8 +270,6 @@ export default class GeoJSONMap extends Component {
           <Panel style={bottomPanelStyle}>
            <form>
             <FormGroup>
-              
-              
               <ControlLabel>Tourism: {this.state.tourism} %</ControlLabel>
               <FormControl type="range"
                 value={this.state.tourism}
