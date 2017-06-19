@@ -65,8 +65,8 @@ const MARKER_RADIUS_DISTANCE_FACTOR = 1/4;
 const MARKER_RADIUS_MAX_KM = 20;
 
 // const MAP_STYLE = "mapbox://styles/mapbox/dark-v9"
-// const MAP_STYLE = "mapbox://styles/jasperhartong/cj3a0w0hu00012rpet2mtv7h7"
-const MAP_STYLE = "mapbox://styles/jasperhartong/cj1uzj8xj00092sk9ufhlhuon";  // dark map
+const MAP_STYLE = "mapbox://styles/jasperhartong/cj3a0w0hu00012rpet2mtv7h7"
+// const MAP_STYLE = "mapbox://styles/jasperhartong/cj1uzj8xj00092sk9ufhlhuon";  // dark map
 // const MAP_STYLE = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // white map
 // const MAP_STYLE = "mapbox://styles/jasperhartong/cj1wiupfm002m2rn0y6bp80ys";  // 'natural map'
 
@@ -138,6 +138,7 @@ export default class GeoJSONMap extends Component {
       // pitch:DEFAULT_FITBOUNDSOPTIONS._default_pitch,
       // routeGeojson: routeGeojson,
       markerGeojson: markerGeojson,
+      filteredMarkerGeoJson: markerGeojson,
       lineWidth: 3,
       // bounds: [DESTINATION_COORDS, ORIGIN_COORDS],  // initiate with preset bounding box
       // destinationCoords: DESTINATION_COORDS,
@@ -152,7 +153,7 @@ export default class GeoJSONMap extends Component {
   }
 
   filterByBoundingBox(){
-    let boundingTL = [52.400443, 4.779117]
+    let boundingTL = [52.385554, 4.838650]
     let boundingBR = [52.337852, 4.935210];
     let points = this.state.markerGeojson;
     let featuresArray = [];
@@ -179,7 +180,7 @@ export default class GeoJSONMap extends Component {
     this.setFilteredFeatures();
   }
 
-  geojsonFilter(geojson) {
+  geojsonFilter(filterArray,geojson) {
     /*
       Returns copied instance of geojson, with features filtered by radius from originCoords
       - sampling allows you to only get a random sampling of the data
@@ -191,9 +192,9 @@ export default class GeoJSONMap extends Component {
     var featuresList = []
 
     // console.log(feature.properties.T_sum, feature.properties.A_sum, feature.properties.PT_sum)
-    let tourism = self.state.tourism /100;
-    let amenities = self.state.amenities /100;
-    let publicTransport = self.state.publicTransport /100;
+    let tourism = filterArray[0] /100;
+    let amenities = filterArray[1] /100;
+    let publicTransport = filterArray[2] /100;
     // console.log(self.state.tourism, self.state.amenities, self.state.publicTransport)
     geojson["features"] = geojson["features"].filter(function(feature){
       let distance = Infinity;
@@ -220,31 +221,62 @@ export default class GeoJSONMap extends Component {
     This function uses the geojsonFilter to show a certain subset of the data.
       - This subset can be based on a samplesize (e.g: 0.05 of the data), or based on a radius
     */
-
+    let filteredMarkers = this.geojsonFilter(markerGeojson)
     this.setState({
-      "markerGeojson": this.geojsonFilter(
-        markerGeojson
-      )
+      "filteredMarkerGeoJson":filteredMarkers
     });
   }
 
   changeTourism(ev){
+    let tourism = ev.target.value ? parseFloat(ev.target.value) : 0;
+    let amenities = this.state.amenities;
+    let publicTransport = this.state.publicTransport;
+    let filterArray = [tourism,amenities,publicTransport];
+
+    let currentMarkers = this.state.markerGeojson;
+
+    let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
     this.setState(
       {
-        tourism: (ev.target.value ? parseFloat(ev.target.value) : 0)}
-      ,this.setFilteredFeatures);
+        tourism: tourism,
+        filteredMarkerGeoJson: filteredMarkers,
+      }
+    );
   }
 
   changeAmenities(ev){
+    let amenities = ev.target.value ? parseFloat(ev.target.value) : 0;
+    let tourism = this.state.tourism;
+    let publicTransport = this.state.publicTransport;
+    let filterArray = [tourism,amenities,publicTransport];
+
+    let currentMarkers = this.state.markerGeojson;
+
+    let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
     this.setState(
-      {amenities: (ev.target.value ? parseFloat(ev.target.value) : 0)}
-      ,this.setFilteredFeatures);
+      {
+        amenities: amenities,
+        filteredMarkerGeoJson: filteredMarkers,
+      }
+    );
   }
 
   changePublicTransport(ev){
+    let publicTransport = ev.target.value ? parseFloat(ev.target.value) : 0;
+    let amenities = this.state.amenities;
+    let tourism = this.state.tourism;
+    let filterArray = [tourism,amenities,publicTransport];
+
+    let currentMarkers = this.state.markerGeojson;
+
+    let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
     this.setState(
-      {publicTransport: (ev.target.value ? parseFloat(ev.target.value) : 0)}
-      ,this.setFilteredFeatures);
+      {
+        publicTransport: publicTransport,
+        filteredMarkerGeoJson: filteredMarkers,
+      }
+    );
+
   }
 
   onMarkerClick(coords) {
@@ -299,10 +331,10 @@ export default class GeoJSONMap extends Component {
             movingMethod="jumpTo"
             bearing={this.state.bearing}
             containerStyle={{ height: "100%", width: "100%" }}>
-            { this.state.markerGeojson &&
+            { this.state.filteredMarkerGeoJson &&
             <GeoJSONLayer
               id={"marker-layer"}
-              data={this.state.markerGeojson}
+              data={this.state.filteredMarkerGeoJson}
               circleLayout={{
                 "visibility": "visible",
               }}
