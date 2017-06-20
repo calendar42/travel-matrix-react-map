@@ -414,19 +414,24 @@ export default class GeoJSONMap extends Component {
 
   exportPoints(){
     let points = this.state.filteredMarkerGeoJson;
-    for (var i = 0; i < 3; i++) {
-      this.getAddresses(this.getReposCallback,points.features[i],i,3);
-    }
-    // for (var i = 0; i < points.features.length; i++) {
-    //   this.getAddresses(this.getReposCallback,points.features[i],i,points.features.length);
+    // for (var i = 0; i < 50; i++) {
+    //   this.getAddresses(this.getReposCallback,points.features[i],i,50);
     // }
+    for (var i = 0; i < points.features.length; i++) {
+      this.getAddresses(this.getReposCallback,points.features[i],i,points.features.length);
+    }
   }
 
   // 3
   getReposCallback(results,order,isFinishedFetching){
 
     let filteredMarkerGeoJson = this.state.filteredMarkerGeoJson;
-    filteredMarkerGeoJson.features[order].properties["address"] = results.results[0].formatted_address;
+    if (typeof(results.results[0]) !== 'undefined') {
+      filteredMarkerGeoJson.features[order].properties["address"] = results.results[0].formatted_address;
+    }
+    else {
+      console.log(filteredMarkerGeoJson.features[order].geometry.coordinates);
+    }
 
     this.setState({
       filteredMarkerGeoJson: filteredMarkerGeoJson,
@@ -482,7 +487,7 @@ export default class GeoJSONMap extends Component {
 
   // 1
   getAddresses(callback,point,order,maxCount) {
-    let url = 'http://maps.googleapis.com/maps/api/geocode/json?language=en&latlng='+point.geometry.coordinates[1] +","+point.geometry.coordinates[0];
+    let url = window.location.pathname+'proxy/google' +'?language=en&latlng='+point.geometry.coordinates[1].toFixed(6) +","+point.geometry.coordinates[0].toFixed(6);
     return fetch(url)
       .then((response) => response.json())
       .then((responseJson) => {

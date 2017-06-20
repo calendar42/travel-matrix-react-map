@@ -16,6 +16,15 @@ app.use('/static/images', express.static(path.resolve(__dirname + '/../app/build
 app.use('/static/js', express.static(path.resolve(__dirname + '/../app/build/static/js')));
 app.use('/static/media', express.static(path.resolve(__dirname + '/../app/build/static/media')));
 
+
+app.use('/proxy/google/', proxy("https://maps.googleapis.com/maps/api/geocode/json", {
+  forwardPath: function(req, res) {
+    req.url += "&key="+process.env.GOOGLE_API_KEY;
+    return "https://maps.googleapis.com/maps/api/geocode/json" + require('url').parse(req.url).path.substring(1);
+  }
+}));
+
+
 // CATCHING all unmatched calls towards the index
 // !!!!!!!!!!!!!!!!!!!!!!
 // The order is important

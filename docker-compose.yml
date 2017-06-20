@@ -1,4 +1,6 @@
 web:
   build: .
+  environment:
+    - GOOGLE_API_KEY=${GOOGLE_API_KEY}
   ports:
    - "8042:8042"
