@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import ReactMapboxGl, { Marker, GeoJSONLayer, Cluster } from "react-mapbox-gl";
+import ReactMapboxGl, { Marker, GeoJSONLayer, Cluster, Layer,Feature,Popup } from "react-mapbox-gl";
 import config from "./config.json";
 import {haversineDistance, getRandomColor} from "./utils.js";
 // import routeGeojson from "./data/geojson_filtered_gt_5.json";
@@ -127,6 +127,15 @@ const bottomPanelStyle = {
   overflow: "auto"
 }
 
+const layoutLayer = { 'icon-image': 'bike' };
+// const StyledPopup = styled.div`
+//   background: white;
+//   color: #3F618C;
+//   font-weight: 400;
+//   padding: 5px;
+//   border-radius: 2px;
+// `;
+
 var fetchedRequestsCount = 0;
 
 export default class GeoJSONMap extends Component {
@@ -142,6 +151,7 @@ export default class GeoJSONMap extends Component {
       // pitch:DEFAULT_FITBOUNDSOPTIONS._default_pitch,
       // routeGeojson: routeGeojson,
       markerGeojson: markerGeojson,
+      bikesJson: {},
       markerCount: 0,
       lineWidth: 3,
       // bounds: [DESTINATION_COORDS, ORIGIN_COORDS],  // initiate with preset bounding box
@@ -168,6 +178,8 @@ export default class GeoJSONMap extends Component {
 
     this.getAddresses = this.getAddresses.bind(this);
     this.getReposCallback = this.getReposCallback.bind(this);
+    this.loadBikes = this.loadBikes.bind(this);
+    this.loadBikesCallback = this.loadBikesCallback.bind(this);
     this.filterByBoundingBox = this.filterByBoundingBox.bind(this);
   }
 
@@ -289,6 +301,7 @@ export default class GeoJSONMap extends Component {
   componentDidMount() {
     this.filterByBoundingBox();
     this.setFilteredFeatures();
+    this.loadBikes(this.loadBikesCallback);
   }
 
   geojsonFilter(filterArray,geojson) {
@@ -414,15 +427,14 @@ export default class GeoJSONMap extends Component {
 
   exportPoints(){
     let points = this.state.filteredMarkerGeoJson;
-    // for (var i = 0; i < 50; i++) {
-    //   this.getAddresses(this.getReposCallback,points.features[i],i,50);
-    // }
-    for (var i = 0; i < points.features.length; i++) {
-      this.getAddresses(this.getReposCallback,points.features[i],i,points.features.length);
+    for (var i = 0; i < 50; i++) {
+      this.getAddresses(this.getReposCallback,points.features[i],i,50);
     }
+    // for (var i = 0; i < points.features.length; i++) {
+    //   this.getAddresses(this.getReposCallback,points.features[i],i,points.features.length);
+    // }
   }
 
-  // 3
   getReposCallback(results,order,isFinishedFetching){
 
     let filteredMarkerGeoJson = this.state.filteredMarkerGeoJson;
@@ -459,25 +471,25 @@ export default class GeoJSONMap extends Component {
     }
 
     let options = {
-        delimiter : {
-            field : ';', // Comma field delimiter
-            array : ',',
-        }
+      delimiter : {
+        field : ';', // Comma field delimiter
+        array : ',',
+      }
     };
 
     let json2csvCallback = function (err, csv) {
       if (err) throw err;
 
       if (window.navigator.msSaveOrOpenBlob) {
-          var blob = new Blob([csv]);
-          window.navigator.msSaveOrOpenBlob(blob, 'myFile.csv');
+        var blob = new Blob([csv]);
+        window.navigator.msSaveOrOpenBlob(blob, 'myFile.csv');
       } else {
-          var a         = document.createElement('a');
-          a.href        = 'data:attachment/csv,' +  encodeURIComponent(csv);
-          a.target      = '_blank';
-          a.download    = 'bike-placement-spots.csv';
-          document.body.appendChild(a);
-          a.click();
+        var a         = document.createElement('a');
+        a.href        = 'data:attachment/csv,' +  encodeURIComponent(csv);
+        a.target      = '_blank';
+        a.download    = 'bike-placement-spots.csv';
+        document.body.appendChild(a);
+        a.click();
       }
 
     };
@@ -485,7 +497,6 @@ export default class GeoJSONMap extends Component {
     converter.json2csv(data,json2csvCallback,options)
   }
 
-  // 1
   getAddresses(callback,point,order,maxCount) {
     let url = window.location.pathname+'proxy/google' +'?language=en&latlng='+point.geometry.coordinates[1].toFixed(6) +","+point.geometry.coordinates[0].toFixed(6);
     return fetch(url)
@@ -504,8 +515,45 @@ export default class GeoJSONMap extends Component {
       });
   }
 
-  onMarkerClick(coords) {
-    console.log(coords);
+  loadBikes(callback){
+    let url = 'https://app.flick.bike/FlickBike/app/bike?industryType=2&lat=52.389040&lng=4.889559&requestType=30001'
+    return fetch(url)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        callback(responseJson);
+      })
+      .catch((response) => {
+        console.error(response.message)
+      });
+  }
+
+  loadBikesCallback(results){
+    console.log(results);
+    let bikes = [];
+    if (results.code === 200) {
+      bikes = results.data.map(function(bike){
+        bike.coordinates = [bike.gLng,bike.gLat];
+        return bike;
+      })
+    }
+    this.setState({
+      bikesJson: bikes
+    })
+  }
+
+  onMarkerClick(marker) {
+    this.setState({
+      popUpCoords: marker.coordinates,
+      popUpText: marker,
+    })
+  }
+  onPopUpClick(){
+    delete this.state.popUpCoords;
+    delete this.state.popUpText;
+    this.setState(this.state)
+  }
+  onToggleHover(cursorType,ev) {
+    ev.map.getCanvas().style.cursor = cursorType;
   }
 
   clusterMarker = (coordinates, pointCount) => (
@@ -515,6 +563,23 @@ export default class GeoJSONMap extends Component {
   );
 
   render() {
+    let bikeTemplates;
+    let bikes = this.state.bikesJson;
+    if (Array.isArray(bikes)) {
+      bikeTemplates = bikes.map(
+        (bike) => (
+          <Feature
+            key={bike.bid}
+            onMouseEnter={this.onToggleHover.bind(this, 'pointer')}
+            onMouseLeave={this.onToggleHover.bind(this, '')}
+            onClick={this.onMarkerClick.bind(this, bike)}
+            coordinates={bike.coordinates}
+          />
+        )
+      );
+
+    }
+
     return (
         <div style={mobileContainerStyle}>
         <div id="triangle"></div>
@@ -547,6 +612,7 @@ export default class GeoJSONMap extends Component {
             </FormGroup>
           </form>
           <button onClick={this.exportPoints.bind(this)}>Export points</button>
+          <button onClick={this.loadBikes.bind(this,this.loadBikesCallback)}>Refresh Bike Locations</button>
           {this.state.markerCount}
         </Panel>
         }
@@ -559,18 +625,44 @@ export default class GeoJSONMap extends Component {
             bearing={this.state.bearing}
             containerStyle={{ height: "100%", width: "100%" }}>
             { this.state.filteredMarkerGeoJson &&
-            <GeoJSONLayer
-              id={"marker-layer"}
-              data={this.state.filteredMarkerGeoJson}
-              circleLayout={{
-                "visibility": "visible",
-              }}
-              circlePaint={{
-                "circle-color": "rgb(0,171,163)",
-                "circle-opacity": 1,
-                "circle-radius": 3
-              }}
-            />
+              <GeoJSONLayer
+                id={"marker-layer"}
+                data={this.state.filteredMarkerGeoJson}
+                circleLayout={{
+                  "visibility": "visible",
+                }}
+                circlePaint={{
+                  "circle-color": "rgb(0,171,163)",
+                  "circle-opacity": 1,
+                  "circle-radius": 3
+                }}
+              />
+            }
+
+            <Layer
+               type="symbol"
+               id="marker"
+               layout={{ "icon-image": "bicycle-share-15" }}>
+               {bikeTemplates}
+            </Layer>
+            {
+              this.state.popUpCoords && (
+                <Popup
+                  key={this.state.popUpText.bid}
+
+                  offset={[0, -50]}
+                  coordinates={this.state.popUpCoords}
+                >
+                    <span style={{position: 'absolute',top: '0px',right:'6px',cursor:'pointer'}} onClick={this.onPopUpClick.bind(this)}>X</span>
+                    <div>
+                      {this.state.popUpText.gsm}
+                    </div>
+                    <div>
+                      {this.state.popUpText.price} $ / {this.state.popUpText.powerPercent} %
+                    </div>
+
+                </Popup>
+              )
             }
           </ReactMapboxGl>
         }
