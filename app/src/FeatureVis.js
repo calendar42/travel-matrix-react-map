@@ -3,7 +3,7 @@ import ReactMapboxGl, { Marker, GeoJSONLayer, Cluster, Layer,Feature,Popup } fro
 import config from "./config.json";
 import {haversineDistance, getRandomColor} from "./utils.js";
 // import routeGeojson from "./data/geojson_filtered_gt_5.json";
-import markerGeojson from "./data/cleared.json";
+// import markerGeojson from "./data/cleared.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 import turf from "@turf/turf";
 import converter from "json-2-csv";
@@ -150,7 +150,6 @@ export default class GeoJSONMap extends Component {
       bearing: 0,
       // pitch:DEFAULT_FITBOUNDSOPTIONS._default_pitch,
       // routeGeojson: routeGeojson,
-      markerGeojson: markerGeojson,
       bikesJson: {},
       markerCount: 0,
       lineWidth: 3,
@@ -174,13 +173,14 @@ export default class GeoJSONMap extends Component {
     ]]);
 
     let isInside = turf.inside(pt, poly);
-    console.log(isInside);
+
 
     this.getAddresses = this.getAddresses.bind(this);
     this.getReposCallback = this.getReposCallback.bind(this);
     this.loadBikes = this.loadBikes.bind(this);
     this.loadBikesCallback = this.loadBikesCallback.bind(this);
     this.filterByBoundingBox = this.filterByBoundingBox.bind(this);
+    this.handleFileUpload = this.handleFileUpload.bind(this);
   }
 
   filterByBoundingBox(){
@@ -215,7 +215,6 @@ export default class GeoJSONMap extends Component {
       if(feature.properties.T_sum && feature.properties.A_sum  && feature.properties.PT_sum){
         return true
       }
-      console.log('Some nulled');
       return false
     });
 
@@ -299,9 +298,6 @@ export default class GeoJSONMap extends Component {
   }
 
   componentDidMount() {
-    this.filterByBoundingBox();
-    this.setFilteredFeatures();
-    this.loadBikes(this.loadBikesCallback);
   }
 
   geojsonFilter(filterArray,geojson) {
@@ -351,8 +347,8 @@ export default class GeoJSONMap extends Component {
       - This subset can be based on a samplesize (e.g: 0.05 of the data), or based on a radius
     */
     let filterArray = [this.state.tourism,this.state.amenities,this.state.publicTransport];
-
-    let filteredMarkers = this.geojsonFilter(filterArray,markerGeojson)
+    let currentMarkers = this.state.markerGeojson;
+    let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
     this.setState({
       filteredMarkerGeoJson:filteredMarkers,
       markerCount: filteredMarkers.features.length
@@ -369,12 +365,17 @@ export default class GeoJSONMap extends Component {
 
       let currentMarkers = this.state.markerGeojson;
 
-      let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
+      let filteredMarkers;
+      let markerCount = 0;
+      if (typeof(currentMarkers) !== 'undefined') {
+        filteredMarkers = this.geojsonFilter(filterArray,currentMarkers);
+        markerCount = filteredMarkers.features.length;
+      }
       this.setState(
         {
           tourism: tourism,
           filteredMarkerGeoJson: filteredMarkers,
-          markerCount: filteredMarkers.features.length
+          markerCount: markerCount,
         }
       );
     }
@@ -392,12 +393,17 @@ export default class GeoJSONMap extends Component {
 
       let currentMarkers = this.state.markerGeojson;
 
-      let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
+      let filteredMarkers;
+      let markerCount = 0;
+      if (typeof(currentMarkers) !== 'undefined') {
+        filteredMarkers = this.geojsonFilter(filterArray,currentMarkers);
+        markerCount = filteredMarkers.features.length;
+      }
       this.setState(
         {
           amenities: amenities,
           filteredMarkerGeoJson: filteredMarkers,
-          markerCount: filteredMarkers.features.length
+          markerCount: markerCount,
         }
       );
     }
@@ -413,12 +419,17 @@ export default class GeoJSONMap extends Component {
 
       let currentMarkers = this.state.markerGeojson;
 
-      let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
+      let filteredMarkers;
+      let markerCount = 0;
+      if (typeof(currentMarkers) !== 'undefined') {
+        filteredMarkers = this.geojsonFilter(filterArray,currentMarkers);
+        markerCount = filteredMarkers.features.length;
+      }
       this.setState(
         {
           publicTransport: publicTransport,
           filteredMarkerGeoJson: filteredMarkers,
-          markerCount: filteredMarkers.features.length
+          markerCount: markerCount,
         }
       );
     }
@@ -427,8 +438,11 @@ export default class GeoJSONMap extends Component {
 
   exportPoints(){
     let points = this.state.filteredMarkerGeoJson;
-    for (var i = 0; i < 50; i++) {
-      this.getAddresses(this.getReposCallback,points.features[i],i,50);
+    if (typeof(points) !== 'undefined') {
+
+      for (var i = 0; i < 50; i++) {
+        this.getAddresses(this.getReposCallback,points.features[i],i,50);
+      }
     }
     // for (var i = 0; i < points.features.length; i++) {
     //   this.getAddresses(this.getReposCallback,points.features[i],i,points.features.length);
@@ -498,7 +512,13 @@ export default class GeoJSONMap extends Component {
   }
 
   getAddresses(callback,point,order,maxCount) {
-    let url = window.location.pathname+'proxy/google' +'?language=en&latlng='+point.geometry.coordinates[1].toFixed(6) +","+point.geometry.coordinates[0].toFixed(6);
+    let lat = point.geometry.coordinates[1] +'';
+    let lng = point.geometry.coordinates[0] +'';
+    lat = lat.slice(0, lat.indexOf('.') + 6);
+    lng = lng.slice(0, lng.indexOf('.') + 6);
+
+    let url = (process.env.REACT_APP_PROXY_HOST_URL ? process.env.REACT_APP_PROXY_HOST_URL : '') +'/proxy/google' +'?language=en&latlng='+lat +","+lng;
+    console.log(url);
     return fetch(url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -507,7 +527,7 @@ export default class GeoJSONMap extends Component {
         if (fetchedRequestsCount === maxCount) {
           isFinishedFetching = true;
         }
-        console.log(fetchedRequestsCount);
+
         callback(responseJson,order,isFinishedFetching);
       })
       .catch((response) => {
@@ -516,7 +536,7 @@ export default class GeoJSONMap extends Component {
   }
 
   loadBikes(callback){
-    let url = 'https://app.flick.bike/FlickBike/app/bike?industryType=2&lat=52.389040&lng=4.889559&requestType=30001'
+    let url = (process.env.REACT_APP_PROXY_HOST_URL ? process.env.REACT_APP_PROXY_HOST_URL : '') +'/proxy/flickbike';
     return fetch(url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -528,7 +548,6 @@ export default class GeoJSONMap extends Component {
   }
 
   loadBikesCallback(results){
-    console.log(results);
     let bikes = [];
     if (results.code === 200) {
       bikes = results.data.map(function(bike){
@@ -561,6 +580,28 @@ export default class GeoJSONMap extends Component {
       { pointCount }
     </Marker>
   );
+  handleFileUpload(ev){
+    let reader = new FileReader();
+    let self = this;
+    reader.onload = function(e) {
+      let data = JSON.parse(reader.result);
+      self.setState({
+        markerGeojson: data
+      },self.prepareDataForVisual);
+
+    };
+    let file = ev.target.files[0];
+    if (file) {
+      reader.readAsText(file);
+    }
+
+  }
+
+  prepareDataForVisual(){
+    this.filterByBoundingBox();
+    this.setFilteredFeatures();
+    this.loadBikes(this.loadBikesCallback);
+  }
 
   render() {
     let bikeTemplates;
@@ -613,6 +654,7 @@ export default class GeoJSONMap extends Component {
           </form>
           <button onClick={this.exportPoints.bind(this)}>Export points</button>
           <button onClick={this.loadBikes.bind(this,this.loadBikesCallback)}>Refresh Bike Locations</button>
+          <input type="file" onChange={this.handleFileUpload} />
           {this.state.markerCount}
         </Panel>
         }
@@ -655,10 +697,13 @@ export default class GeoJSONMap extends Component {
                 >
                     <span style={{position: 'absolute',top: '0px',right:'6px',cursor:'pointer'}} onClick={this.onPopUpClick.bind(this)}>X</span>
                     <div>
-                      {this.state.popUpText.gsm}
+                      GSM: {this.state.popUpText.gsm}
                     </div>
                     <div>
-                      {this.state.popUpText.price} $ / {this.state.popUpText.powerPercent} %
+                      PRICE: {this.state.popUpText.price} $ / POWER: {this.state.popUpText.powerPercent} %
+                    </div>
+                    <div>
+                      BikeID: {this.state.popUpText.bid}
                     </div>
 
                 </Popup>

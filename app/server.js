@@ -18,12 +18,17 @@ app.use('/static/media', express.static(path.resolve(__dirname + '/../app/build/
 
 
 app.use('/proxy/google/', proxy("https://maps.googleapis.com/maps/api/geocode/json", {
-  forwardPath: function(req, res) {
+  proxyReqPathResolver: function(req, res) {
     req.url += "&key="+process.env.GOOGLE_API_KEY;
     return "https://maps.googleapis.com/maps/api/geocode/json" + require('url').parse(req.url).path.substring(1);
   }
 }));
 
+app.use('/proxy/flickbike/', proxy("https://app.flick.bike/FlickBike/app/bike?industryType=2&lat=52.389040&lng=4.889559&requestType=30001", {
+  proxyReqPathResolver: function(req, res) {
+    return "https://app.flick.bike/FlickBike/app/bike?industryType=2&lat=52.389040&lng=4.889559&requestType=30001" + require('url').parse(req.url).path.substring(1);
+  }
+}));
 
 // CATCHING all unmatched calls towards the index
 // !!!!!!!!!!!!!!!!!!!!!!
