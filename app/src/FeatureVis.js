@@ -6,6 +6,7 @@ import {haversineDistance, getRandomColor} from "./utils.js";
 import markerGeojson from "./data/cleared.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 import turf from "@turf/turf";
+import converter from "json-2-csv";
 
 const { accessToken, center } = config;
 
@@ -126,6 +127,7 @@ const bottomPanelStyle = {
   overflow: "auto"
 }
 
+var fetchedRequestsCount = 0;
 
 export default class GeoJSONMap extends Component {
   /*
@@ -148,7 +150,7 @@ export default class GeoJSONMap extends Component {
       open: true,
       amenities: 0,
       tourism: 0,
-      publicTransport:0
+      publicTransport:0,
     };
 
 
@@ -164,7 +166,8 @@ export default class GeoJSONMap extends Component {
     let isInside = turf.inside(pt, poly);
     console.log(isInside);
 
-    
+    this.getAddresses = this.getAddresses.bind(this);
+    this.getReposCallback = this.getReposCallback.bind(this);
     this.filterByBoundingBox = this.filterByBoundingBox.bind(this);
   }
 
@@ -409,6 +412,93 @@ export default class GeoJSONMap extends Component {
 
   }
 
+  exportPoints(){
+    let points = this.state.filteredMarkerGeoJson;
+    for (var i = 0; i < 3; i++) {
+      this.getAddresses(this.getReposCallback,points.features[i],i,3);
+    }
+    // for (var i = 0; i < points.features.length; i++) {
+    //   this.getAddresses(this.getReposCallback,points.features[i],i,points.features.length);
+    // }
+  }
+
+  // 3
+  getReposCallback(results,order,isFinishedFetching){
+
+    let filteredMarkerGeoJson = this.state.filteredMarkerGeoJson;
+    filteredMarkerGeoJson.features[order].properties["address"] = results.results[0].formatted_address;
+
+    this.setState({
+      filteredMarkerGeoJson: filteredMarkerGeoJson,
+    })
+    console.log(this.state.filteredMarkerGeoJson.features[order].properties["address"]);
+    if (isFinishedFetching) {
+      console.log('We finished fetching');
+      fetchedRequestsCount = 0;
+      this.prepareDataForExport();
+
+    }
+  }
+
+  prepareDataForExport(){
+    let data = [];
+
+    let currentMarkers = this.state.filteredMarkerGeoJson.features;
+
+    for (var i = 0; i < currentMarkers.length; i++) {
+      let csvElement = {
+        "coordinates": currentMarkers[i].geometry.coordinates,
+        "address": currentMarkers[i].properties.address
+      }
+      data.push(csvElement);
+    }
+
+    let options = {
+        delimiter : {
+            field : ';', // Comma field delimiter
+            array : ',',
+        }
+    };
+
+    let json2csvCallback = function (err, csv) {
+      if (err) throw err;
+
+      if (window.navigator.msSaveOrOpenBlob) {
+          var blob = new Blob([csv]);
+          window.navigator.msSaveOrOpenBlob(blob, 'myFile.csv');
+      } else {
+          var a         = document.createElement('a');
+          a.href        = 'data:attachment/csv,' +  encodeURIComponent(csv);
+          a.target      = '_blank';
+          a.download    = 'bike-placement-spots.csv';
+          document.body.appendChild(a);
+          a.click();
+      }
+
+    };
+
+    converter.json2csv(data,json2csvCallback,options)
+  }
+
+  // 1
+  getAddresses(callback,point,order,maxCount) {
+    let url = 'http://maps.googleapis.com/maps/api/geocode/json?language=en&latlng='+point.geometry.coordinates[1] +","+point.geometry.coordinates[0];
+    return fetch(url)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        let isFinishedFetching = false;
+        fetchedRequestsCount ++;
+        if (fetchedRequestsCount === maxCount) {
+          isFinishedFetching = true;
+        }
+        console.log(fetchedRequestsCount);
+        callback(responseJson,order,isFinishedFetching);
+      })
+      .catch((response) => {
+        console.error(response.message)
+      });
+  }
+
   onMarkerClick(coords) {
     console.log(coords);
   }
@@ -451,7 +541,7 @@ export default class GeoJSONMap extends Component {
 
             </FormGroup>
           </form>
-
+          <button onClick={this.exportPoints.bind(this)}>Export points</button>
           {this.state.markerCount}
         </Panel>
         }
