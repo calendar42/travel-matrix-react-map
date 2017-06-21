@@ -75,6 +75,7 @@ export default class GeoJSONMap extends Component {
       publicTransport:0,
       totalAmountOfBikes: 1700,
       totalAmountOfPoints: 500,
+      fileUploaded: false,
     };
 
 
@@ -278,10 +279,12 @@ export default class GeoJSONMap extends Component {
     let reader = new FileReader();
     let self = this;
     reader.onload = function(e) {
+      debugger;
       let data = JSON.parse(reader.result);
       self.setState({
-        markerGeojson: data
-      },self.prepareDataForVisual);
+        markerGeojson: data,
+        fileUploaded: true,
+      });
     };
     let file = ev.target.files[0];
     if (file) {
@@ -574,7 +577,8 @@ export default class GeoJSONMap extends Component {
     let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
     this.setState({
       filteredMarkerGeoJson:filteredMarkers,
-      markerCount: filteredMarkers.features.length
+      markerCount: filteredMarkers.features.length,
+      dataLoaded: true
     });
   }
 
@@ -675,42 +679,49 @@ export default class GeoJSONMap extends Component {
         }
         {
           <Panel style={bottomPanelStyle}>
-           <form>
-            <FormGroup>
-              <ControlLabel>Tourism: {this.state.tourism} %</ControlLabel>
-              <FormControl type="range"
-                value={this.state.tourism}
-                onChange={this.changeTourism.bind(this)}
-              />
-              <ControlLabel>Amenities: {this.state.amenities} %</ControlLabel>
-              <FormControl type="range"
-                value={this.state.amenities}
-                onChange={this.changeAmenities.bind(this)}
-              />
-
-              <ControlLabel>Public Transport: {this.state.publicTransport} %</ControlLabel>
-              <FormControl type="range"
-                value={this.state.publicTransport}
-                onChange={this.changePublicTransport.bind(this)}
-              />
-
-            </FormGroup>
-          </form>
-          <form onSubmit={this.handleSubmitPointsBikes.bind(this)}>
-            <label>
-              Enter Custom Amount of Bikes:
-              <input type="text" value={this.state.totalAmountOfBikes} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfBikes')} />
-            </label>
-            <label>
-              Enter Custom Amount of Points:
-              <input type="text" value={this.state.totalAmountOfPoints} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfPoints')} />
-            </label><br></br>
             <input type="file" onChange={this.handleFileUpload} />
-            <input type="submit" value="Submit" />
-          </form>
-          <button onClick={this.exportPoints.bind(this)}>Export points</button>
-          <button onClick={this.loadBikes.bind(this,this.loadBikesCallback)}>Refresh Bike Locations</button>
-          {this.state.markerCount}
+            {this.state.fileUploaded && (
+              <form onSubmit={this.handleSubmitPointsBikes.bind(this)}>
+                <label>
+                  Enter Custom Amount of Bikes:
+                  <input type="text" value={this.state.totalAmountOfBikes} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfBikes')} />
+                </label>
+                <label>
+                  Enter Custom Amount of Points:
+                  <input type="text" value={this.state.totalAmountOfPoints} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfPoints')} />
+                </label><br></br>
+                <input type="submit" value="Submit" />
+              </form>
+            )}
+            {this.state.dataLoaded && (
+              <div>
+                <form>
+                  <FormGroup>
+                    <ControlLabel>Tourism: {this.state.tourism} %</ControlLabel>
+                    <FormControl type="range"
+                      value={this.state.tourism}
+                      onChange={this.changeTourism.bind(this)}
+                    />
+                    <ControlLabel>Amenities: {this.state.amenities} %</ControlLabel>
+                    <FormControl type="range"
+                      value={this.state.amenities}
+                      onChange={this.changeAmenities.bind(this)}
+                    />
+
+                    <ControlLabel>Public Transport: {this.state.publicTransport} %</ControlLabel>
+                    <FormControl type="range"
+                      value={this.state.publicTransport}
+                      onChange={this.changePublicTransport.bind(this)}
+                    />
+
+                  </FormGroup>
+                </form>
+                <div>
+                  <button onClick={this.exportPoints.bind(this)}>Export points</button> <br></br>
+                  <button onClick={this.loadBikes.bind(this,this.loadBikesCallback)}>Refresh Bike Locations</button>
+                </div>
+              </div>
+            )}
         </Panel>
         }
         {
