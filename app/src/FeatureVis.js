@@ -77,6 +77,7 @@ export default class GeoJSONMap extends Component {
       totalAmountOfBikes: 1700,
       totalAmountOfPoints: 500,
       fileUploaded: false,
+      loading: false,
     };
 
 
@@ -88,6 +89,8 @@ export default class GeoJSONMap extends Component {
     this.filterByBoundingBox = this.filterByBoundingBox.bind(this);
     this.handleFileUpload = this.handleFileUpload.bind(this);
     this.geojsonFilter = this.geojsonFilter.bind(this);
+    this.prepareDataForExport = this.prepareDataForExport.bind(this);
+    this.exportPoints = this.exportPoints.bind(this);
   }
 
 
@@ -590,6 +593,9 @@ export default class GeoJSONMap extends Component {
 
 
   exportPoints(){
+    this.setState({
+      loading: true,
+    })
     let points = this.state.filteredMarkerGeoJson;
     if (typeof(points) !== 'undefined') {
 
@@ -606,11 +612,12 @@ export default class GeoJSONMap extends Component {
     let data = [];
 
     let currentMarkers = this.state.filteredMarkerGeoJson.features;
-
+    debugger;
     for (var i = 0; i < currentMarkers.length; i++) {
       let csvElement = {
         "coordinates": currentMarkers[i].geometry.coordinates,
-        "address": currentMarkers[i].properties.address
+        "address": currentMarkers[i].properties.address,
+        "amountOfBikes": currentMarkers[i].amountOfBikes,
       }
       data.push(csvElement);
     }
@@ -621,10 +628,12 @@ export default class GeoJSONMap extends Component {
         array : ',',
       }
     };
-
+    let self=this;
     let json2csvCallback = function (err, csv) {
       if (err) throw err;
-
+      self.setState({
+        loading: false,
+      })
       if (window.navigator.msSaveOrOpenBlob) {
         var blob = new Blob([csv]);
         window.navigator.msSaveOrOpenBlob(blob, 'myFile.csv');
@@ -674,6 +683,7 @@ export default class GeoJSONMap extends Component {
         <div style={mobileContainerStyle}>
 
         {
+
           <Panel style={bottomPanelStyle}>
             <form className="form-horizontal">
               <div className="form-group">
@@ -682,7 +692,6 @@ export default class GeoJSONMap extends Component {
                 </div>
               </div>
             </form>
-
             {this.state.fileUploaded && (
               <form className="form-horizontal" onSubmit={this.handleSubmitPointsBikes.bind(this)}>
                 <div className="form-group">
@@ -755,7 +764,7 @@ export default class GeoJSONMap extends Component {
                   </FormGroup>
                 </form> */}
                 <div className="columns">
-                  <button className="btn col-5" onClick={this.exportPoints.bind(this)}>Export points</button> <br></br>
+                  <button className={ this.state.loading ? 'btn disabled ' : 'btn' } onClick={this.exportPoints.bind(this)}>Export points</button> <br></br>
                   <button className="btn col-5" style={{marginLeft: '56px'}} onClick={this.loadBikes.bind(this,this.loadBikesCallback)}>Refresh Bike Locations</button>
                 </div>
               </div>
