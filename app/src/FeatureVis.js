@@ -3,6 +3,7 @@ import ReactMapboxGl, { Marker, GeoJSONLayer, Layer,Feature,Popup } from "react-
 import config from "./config.json";
 // import routeGeojson from "./data/geojson_filtered_gt_5.json";
 // import markerGeojson from "./data/cleared.json";
+import amsterdamBounds from "./amsterdam.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 import turf from "@turf/turf";
 import converter from "json-2-csv";
@@ -75,16 +76,6 @@ export default class GeoJSONMap extends Component {
     };
 
 
-    let pt = turf.point([-77, 44]);
-    let poly = turf.polygon([[
-      [-81, 41],
-      [-81, 47],
-      [-72, 47],
-      [-72, 41],
-      [-81, 41]
-    ]]);
-
-    let isInside = turf.inside(pt, poly);
 
 
     this.getAddresses = this.getAddresses.bind(this);
@@ -93,6 +84,7 @@ export default class GeoJSONMap extends Component {
     this.loadBikesCallback = this.loadBikesCallback.bind(this);
     this.filterByBoundingBox = this.filterByBoundingBox.bind(this);
     this.handleFileUpload = this.handleFileUpload.bind(this);
+    this.geojsonFilter = this.geojsonFilter.bind(this);
   }
 
 
@@ -305,22 +297,25 @@ export default class GeoJSONMap extends Component {
   /** ============== DATA-MANIPULATION HANDLERS ============== **/
 
   filterByBoundingBox(){
-    let boundingTL = [100, 0]
-    let boundingBR = [0, 100];
+    // Amsterdam has two polygons
+    let poly1  = turf.polygon(amsterdamBounds.coordinates[0])
+    let poly2 = turf.polygon(amsterdamBounds.coordinates[1])
+
     let points = this.state.markerGeojson;
+    points = this.removeNulled(points);
     let featuresArray = [];
 
     for (var i = 0; i < points.features.length; i++) {
-      let lon = points.features[i].geometry.coordinates[0];
-      let lat = points.features[i].geometry.coordinates[1];
+      let pt = turf.point(points.features[i].geometry.coordinates);
 
-      if (lat < boundingTL[0] && lat > boundingBR[0] && lon > boundingTL[1] && lon < boundingBR[1]) {
+      let isInside1 = turf.inside(pt, poly1);
+      let isInside2 = turf.inside(pt, poly2);
+
+      if (isInside1 || isInside2) {
         featuresArray.push(points.features[i]);
       }
     }
-
     points["features"] = featuresArray;
-    points = this.removeNulled(points);
     points = this.normaliseData(points);
 
     this.setState({
@@ -425,6 +420,8 @@ export default class GeoJSONMap extends Component {
     */
     geojson = JSON.parse(JSON.stringify(geojson))  // deepcopy
 
+    let totalAmountOfBikes = 1070;
+    let totalAmountOfPoints = 500;
 
     // console.log(feature.properties.T_sum, feature.properties.A_sum, feature.properties.PT_sum)
     let tourism = filterArray[0] /100;
@@ -432,6 +429,10 @@ export default class GeoJSONMap extends Component {
     let publicTransport = filterArray[2] /100;
 
     // console.log(self.state.tourism, self.state.amenities, self.state.publicTransport)
+
+    /**
+     * Calculate summed score for each point
+    */
     geojson["features"] = geojson["features"].map(function(feature){
       let propsSum = 0;
       if (tourism === 0 && amenities === 0 && publicTransport === 0) {
@@ -451,8 +452,99 @@ export default class GeoJSONMap extends Component {
       return b.propsSum - a.propsSum;
     });
 
-    geojson["features"] = geojson["features"].slice(0,499);
-    // console.log("Done Filtering");
+    // pick first totalAmountOfPoints
+    geojson["features"] = geojson["features"].slice(0,totalAmountOfPoints);
+
+    let propsSumSum = 0;
+    // Calculate all points' sum of propsSum
+    for (var i = 0; i < totalAmountOfPoints; i++) {
+      if (geojson["features"][i]) {
+        propsSumSum += geojson["features"][i].propsSum;
+      }
+      else {
+        console.log(i);
+      }
+    }
+
+
+    let tempTotalNumberBikes = 0;
+    let biggestNumber =0;
+    let biggestNumbersPlace = {};
+
+
+    /**
+     * Calculate how many bikes will assign for each point by
+     * (specific points sum of score / total sum of scores) * totalAmountOfBikes
+     */
+    for (var i = 0; i < totalAmountOfPoints; i++) {
+      let percentagePropsum = ((geojson["features"][i].propsSum)/propsSumSum)
+
+      // Round up the value of amountOfBikes. This will cause unequal results when we actually sum all the points bikes.
+      geojson["features"][i].amountOfBikes = parseInt((percentagePropsum * totalAmountOfBikes).toFixed(0));
+
+      tempTotalNumberBikes += geojson["features"][i].amountOfBikes;
+
+      if (geojson["features"][i].amountOfBikes > biggestNumber) {
+        biggestNumber = geojson["features"][i].amountOfBikes;
+        biggestNumbersPlace = geojson["features"][i];
+      }
+    }
+
+    console.log('Before Total Number of bikes normalization of dist =>', tempTotalNumberBikes);
+
+
+    let differenceBetweenTotalBikes = totalAmountOfBikes - tempTotalNumberBikes;
+    // sort by value
+    geojson["features"].sort(function (a, b) {
+      return b.amountOfBikes - a.amountOfBikes;
+    });
+
+    // Since we dont want more than 4 bikes in one location, we will distribute the overflows
+    let overflowBucket = 0;
+    for (var i = 0; i < totalAmountOfPoints; i++) {
+      if (geojson["features"][i].amountOfBikes >= 4   ) {
+        // Put the overflow to bucket
+        overflowBucket += (geojson["features"][i].amountOfBikes - 4);
+        // Set point's bike to 4
+        geojson["features"][i].amountOfBikes = 4;
+      }
+    }
+
+    // If its minus => we added more bikes than we should (how ? we rounded 0.7,0.6 to 1 therefore, more bikes)
+    // We can withdraw this value from overflowBucket
+    if (differenceBetweenTotalBikes < 0) {
+      overflowBucket -= differenceBetweenTotalBikes
+    }
+    // If its plus  => we added less bikes than we should (how ? we rounded 0.4,0.3 to 0 therefore, less bikes)
+    // We can add this value to overflowBucket
+    else if (differenceBetweenTotalBikes > 0) {
+      overflowBucket += differenceBetweenTotalBikes
+    }
+
+    tempTotalNumberBikes = 0;
+    // If we have bikes in overflowBucket, we can distribute them from top to bottom
+    for (var i = 0; i < totalAmountOfPoints; i++) {
+      if (overflowBucket > 0) {
+        // amountOfBikes in one spot is: 2 we can add (4-2) more
+        if (geojson["features"][i].amountOfBikes < 4) {
+          let bikesCanBeAdded = (4 - geojson["features"][i].amountOfBikes);
+          // Check overflowBucket has quoata
+          if (overflowBucket >= bikesCanBeAdded) {
+            geojson["features"][i].amountOfBikes = 4;
+            overflowBucket -= bikesCanBeAdded;
+          }
+        }
+      }
+      console.log(geojson["features"][i].amountOfBikes);
+      tempTotalNumberBikes += geojson["features"][i].amountOfBikes;
+    }
+
+    console.log('AFTER Total Number of bikes normalization of dist =>', tempTotalNumberBikes);
+    // again sort by sum value
+    geojson["features"].sort(function (a, b) {
+      return b.propsSum - a.propsSum;
+    });
+
     return geojson
   }
 
