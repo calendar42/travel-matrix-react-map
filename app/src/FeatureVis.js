@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import ReactMapboxGl, { Marker, GeoJSONLayer, Layer,Feature,Popup } from "react-mapbox-gl";
 import config from "./config.json";
 // import routeGeojson from "./data/geojson_filtered_gt_5.json";
+// import markerGeojson from "./data/cleared.json";
 import amsterdamBounds from "./amsterdam.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 import turf from "@turf/turf";
@@ -73,6 +74,7 @@ export default class GeoJSONMap extends Component {
       tourism: 0,
       publicTransport:0,
     };
+
 
 
 
@@ -200,14 +202,14 @@ export default class GeoJSONMap extends Component {
     if ((tourism + amenities + publicTransport) <= 100 ) {
       let filterArray = [tourism,amenities,publicTransport];
 
+      let currentMarkers = this.state.markerGeojson;
+
       let filteredMarkers;
       let markerCount = 0;
-
-      filteredMarkers = this.geojsonFilter(filterArray);
-      if (filteredMarkers) {
+      if (typeof(currentMarkers) !== 'undefined') {
+        filteredMarkers = this.geojsonFilter(filterArray,currentMarkers);
         markerCount = filteredMarkers.features.length;
       }
-
       this.setState(
         {
           tourism: tourism,
@@ -226,14 +228,14 @@ export default class GeoJSONMap extends Component {
     if ((tourism + amenities + publicTransport) <= 100 ) {
       let filterArray = [tourism,amenities,publicTransport];
 
+      let currentMarkers = this.state.markerGeojson;
+
       let filteredMarkers;
       let markerCount = 0;
-
-      filteredMarkers = this.geojsonFilter(filterArray);
-      if (filteredMarkers) {
+      if (typeof(currentMarkers) !== 'undefined') {
+        filteredMarkers = this.geojsonFilter(filterArray,currentMarkers);
         markerCount = filteredMarkers.features.length;
       }
-
       this.setState(
         {
           amenities: amenities,
@@ -252,14 +254,14 @@ export default class GeoJSONMap extends Component {
     if ((tourism + amenities + publicTransport) <= 100 ) {
       let filterArray = [tourism,amenities,publicTransport];
 
+      let currentMarkers = this.state.markerGeojson;
+
       let filteredMarkers;
       let markerCount = 0;
-
-      filteredMarkers = this.geojsonFilter(filterArray);
-      if (filteredMarkers) {
+      if (typeof(currentMarkers) !== 'undefined') {
+        filteredMarkers = this.geojsonFilter(filterArray,currentMarkers);
         markerCount = filteredMarkers.features.length;
       }
-
       this.setState(
         {
           publicTransport: publicTransport,
@@ -411,75 +413,138 @@ export default class GeoJSONMap extends Component {
     return geojson;
   }
 
-  geojsonFilter(filterArray) {
+  geojsonFilter(filterArray,geojson) {
     /*
       Returns copied instance of geojson, with features filtered by radius from originCoords
       - sampling allows you to only get a random sampling of the data
     */
-    let geojson = this.state.markerGeojson;
+    geojson = JSON.parse(JSON.stringify(geojson))  // deepcopy
 
     let totalAmountOfBikes = 1070;
+    let totalAmountOfPoints = 500;
+
     // console.log(feature.properties.T_sum, feature.properties.A_sum, feature.properties.PT_sum)
     let tourism = filterArray[0] /100;
     let amenities = filterArray[1] /100;
     let publicTransport = filterArray[2] /100;
-    if (typeof(geojson) !== 'undefined') {
-      // console.log(self.state.tourism, self.state.amenities, self.state.publicTransport)
-      geojson["features"] = geojson["features"].map(function(feature){
-        let propsSum = 0;
-        if (tourism === 0 && amenities === 0 && publicTransport === 0) {
-          propsSum = (feature.properties.T_sum) + (feature.properties.A_sum) + (feature.properties.PT_sum);
-        }
-        else{
-          propsSum = (feature.properties.T_sum * tourism) + (feature.properties.A_sum * amenities) + (feature.properties.PT_sum * publicTransport);
-        }
 
-        feature.propsSum = propsSum;
+    // console.log(self.state.tourism, self.state.amenities, self.state.publicTransport)
 
-        return feature;
-      });
-
-      let propsSumSum = 0;
-      for (var i = 0; i < 499; i++) {
-        if (geojson["features"][i]) {
-          propsSumSum += geojson["features"][i].propsSum;
-        }
-        else {
-          console.log(i);
-        }
+    /**
+     * Calculate summed score for each point
+    */
+    geojson["features"] = geojson["features"].map(function(feature){
+      let propsSum = 0;
+      if (tourism === 0 && amenities === 0 && publicTransport === 0) {
+        propsSum = (feature.properties.T_sum) + (feature.properties.A_sum) + (feature.properties.PT_sum);
+      }
+      else{
+        propsSum = (feature.properties.T_sum * tourism) + (feature.properties.A_sum * amenities) + (feature.properties.PT_sum * publicTransport);
       }
 
-      let tempTotalNumberBikes = 0;
-      let biggestNumber =0;
-      let biggestNumbersPlace = {};
-      for (var i = 0; i < 499; i++) {
-        let percentagePropsum = ((geojson["features"][i].propsSum)/propsSumSum)
-        geojson["features"][i].amountOfBikes = (percentagePropsum * totalAmountOfBikes);
-        tempTotalNumberBikes += geojson["features"][i].amountOfBikes;
-        console.log(geojson["features"][i].amountOfBikes);
-        if (geojson["features"][i].amountOfBikes > biggestNumber) {
-          biggestNumber = geojson["features"][i].amountOfBikes;
-          biggestNumbersPlace = geojson["features"][i];
-        }
+      feature.propsSum = propsSum;
+
+      return feature;
+    });
+
+    // sort by value
+    geojson["features"].sort(function (a, b) {
+      return b.propsSum - a.propsSum;
+    });
+
+    // pick first totalAmountOfPoints
+    geojson["features"] = geojson["features"].slice(0,totalAmountOfPoints);
+
+    let propsSumSum = 0;
+    // Calculate all points' sum of propsSum
+    for (var i = 0; i < totalAmountOfPoints; i++) {
+      if (geojson["features"][i]) {
+        propsSumSum += geojson["features"][i].propsSum;
       }
-      console.log('Biggest place=> ', biggestNumbersPlace.geometry.coordinates , ' number=> ' ,biggestNumbersPlace.amountOfBikes);
-      for (var i = 0; i < 499; i++) {
-        if (parseInt(geojson["features"][i].amountOfBikes) === 0 ) {
-          console.log('zero');
-        }
+      else {
+        console.log(i);
       }
-      console.log(tempTotalNumberBikes);
-
-      // sort by value
-      geojson["features"].sort(function (a, b) {
-        return b.propsSum - a.propsSum;
-      });
-
-      geojson["features"] = geojson["features"].slice(0,500);
-
     }
 
-    // console.log("Done Filtering");
+
+    let tempTotalNumberBikes = 0;
+    let biggestNumber =0;
+    let biggestNumbersPlace = {};
+
+
+    /**
+     * Calculate how many bikes will assign for each point by
+     * (specific points sum of score / total sum of scores) * totalAmountOfBikes
+     */
+    for (var i = 0; i < totalAmountOfPoints; i++) {
+      let percentagePropsum = ((geojson["features"][i].propsSum)/propsSumSum)
+
+      // Round up the value of amountOfBikes. This will cause unequal results when we actually sum all the points bikes.
+      geojson["features"][i].amountOfBikes = parseInt((percentagePropsum * totalAmountOfBikes).toFixed(0));
+
+      tempTotalNumberBikes += geojson["features"][i].amountOfBikes;
+
+      if (geojson["features"][i].amountOfBikes > biggestNumber) {
+        biggestNumber = geojson["features"][i].amountOfBikes;
+        biggestNumbersPlace = geojson["features"][i];
+      }
+    }
+
+    console.log('Before Total Number of bikes normalization of dist =>', tempTotalNumberBikes);
+
+
+    let differenceBetweenTotalBikes = totalAmountOfBikes - tempTotalNumberBikes;
+    // sort by value
+    geojson["features"].sort(function (a, b) {
+      return b.amountOfBikes - a.amountOfBikes;
+    });
+
+    // Since we dont want more than 4 bikes in one location, we will distribute the overflows
+    let overflowBucket = 0;
+    for (var i = 0; i < totalAmountOfPoints; i++) {
+      if (geojson["features"][i].amountOfBikes >= 4   ) {
+        // Put the overflow to bucket
+        overflowBucket += (geojson["features"][i].amountOfBikes - 4);
+        // Set point's bike to 4
+        geojson["features"][i].amountOfBikes = 4;
+      }
+    }
+
+    // If its minus => we added more bikes than we should (how ? we rounded 0.7,0.6 to 1 therefore, more bikes)
+    // We can withdraw this value from overflowBucket
+    if (differenceBetweenTotalBikes < 0) {
+      overflowBucket -= differenceBetweenTotalBikes
+    }
+    // If its plus  => we added less bikes than we should (how ? we rounded 0.4,0.3 to 0 therefore, less bikes)
+    // We can add this value to overflowBucket
+    else if (differenceBetweenTotalBikes > 0) {
+      overflowBucket += differenceBetweenTotalBikes
+    }
+
+    tempTotalNumberBikes = 0;
+    // If we have bikes in overflowBucket, we can distribute them from top to bottom
+    for (var i = 0; i < totalAmountOfPoints; i++) {
+      if (overflowBucket > 0) {
+        // amountOfBikes in one spot is: 2 we can add (4-2) more
+        if (geojson["features"][i].amountOfBikes < 4) {
+          let bikesCanBeAdded = (4 - geojson["features"][i].amountOfBikes);
+          // Check overflowBucket has quoata
+          if (overflowBucket >= bikesCanBeAdded) {
+            geojson["features"][i].amountOfBikes = 4;
+            overflowBucket -= bikesCanBeAdded;
+          }
+        }
+      }
+      console.log(geojson["features"][i].amountOfBikes);
+      tempTotalNumberBikes += geojson["features"][i].amountOfBikes;
+    }
+
+    console.log('AFTER Total Number of bikes normalization of dist =>', tempTotalNumberBikes);
+    // again sort by sum value
+    geojson["features"].sort(function (a, b) {
+      return b.propsSum - a.propsSum;
+    });
+
     return geojson
   }
 
@@ -489,8 +554,8 @@ export default class GeoJSONMap extends Component {
       - This subset can be based on a samplesize (e.g: 0.05 of the data), or based on a radius
     */
     let filterArray = [this.state.tourism,this.state.amenities,this.state.publicTransport];
-
-    let filteredMarkers = this.geojsonFilter(filterArray)
+    let currentMarkers = this.state.markerGeojson;
+    let filteredMarkers = this.geojsonFilter(filterArray,currentMarkers)
     this.setState({
       filteredMarkerGeoJson:filteredMarkers,
       markerCount: filteredMarkers.features.length
