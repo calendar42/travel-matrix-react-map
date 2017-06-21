@@ -506,7 +506,7 @@ export default class GeoJSONMap extends Component {
       }
     }
 
-    console.log('Before Total Number of bikes normalization of dist =>', tempTotalNumberBikes);
+    // console.log('Before Total Number of bikes normalization of dist =>', tempTotalNumberBikes);
 
 
     let differenceBetweenTotalBikes = totalAmountOfBikes - tempTotalNumberBikes;
@@ -551,11 +551,11 @@ export default class GeoJSONMap extends Component {
           }
         }
       }
-      console.log(geojson["features"][i].amountOfBikes);
+      // console.log(geojson["features"][i].amountOfBikes);
       tempTotalNumberBikes += geojson["features"][i].amountOfBikes;
     }
 
-    console.log('AFTER Total Number of bikes normalization of dist =>', tempTotalNumberBikes);
+    // console.log('AFTER Total Number of bikes normalization of dist =>', tempTotalNumberBikes);
     // again sort by sum value
     geojson["features"].sort(function (a, b) {
       return b.propsSum - a.propsSum;
