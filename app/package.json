@@ -18,7 +18,7 @@
     "react-dom": "^15.4.2",
     "react-mapbox-gl": "^1.4.0",
     "react-raphael": "^0.8.5",
-    "spectre.css": "^0.2.14"
+    "spectre.css": "git://github.com/calendar42/spectre.git"
   },
   "devDependencies": {
     "react-scripts": "0.9.5"
