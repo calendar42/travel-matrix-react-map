@@ -73,8 +73,9 @@ export default class GeoJSONMap extends Component {
       amenities: 0,
       tourism: 0,
       publicTransport:0,
+      totalAmountOfBikes: 1700,
+      totalAmountOfPoints: 500,
     };
-
 
 
 
@@ -288,6 +289,21 @@ export default class GeoJSONMap extends Component {
     }
   }
 
+  handleChangePointsBikes(name,event) {
+    this.setState({
+      [name]: event.target.value});
+  }
+
+  handleSubmitPointsBikes(event) {
+    event.preventDefault();
+    if (this.state.totalAmountOfPoints > 0 && this.state.totalAmountOfBikes >0) {
+      this.prepareDataForVisual()
+    }
+    else {
+      alert('Total number of points and bikes must be greater than zero')
+    }
+  }
+
   /** ============== PANEL HANDLERS ============== **/
 
 
@@ -420,8 +436,8 @@ export default class GeoJSONMap extends Component {
     */
     geojson = JSON.parse(JSON.stringify(geojson))  // deepcopy
 
-    let totalAmountOfBikes = 1070;
-    let totalAmountOfPoints = 500;
+    let totalAmountOfBikes = this.state.totalAmountOfBikes;
+    let totalAmountOfPoints = this.state.totalAmountOfPoints;
 
     // console.log(feature.properties.T_sum, feature.properties.A_sum, feature.properties.PT_sum)
     let tourism = filterArray[0] /100;
@@ -680,9 +696,20 @@ export default class GeoJSONMap extends Component {
 
             </FormGroup>
           </form>
+          <form onSubmit={this.handleSubmitPointsBikes.bind(this)}>
+            <label>
+              Enter Custom Amount of Bikes:
+              <input type="text" value={this.state.totalAmountOfBikes} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfBikes')} />
+            </label>
+            <label>
+              Enter Custom Amount of Points:
+              <input type="text" value={this.state.totalAmountOfPoints} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfPoints')} />
+            </label><br></br>
+            <input type="file" onChange={this.handleFileUpload} />
+            <input type="submit" value="Submit" />
+          </form>
           <button onClick={this.exportPoints.bind(this)}>Export points</button>
           <button onClick={this.loadBikes.bind(this,this.loadBikesCallback)}>Refresh Bike Locations</button>
-          <input type="file" onChange={this.handleFileUpload} />
           {this.state.markerCount}
         </Panel>
         }
