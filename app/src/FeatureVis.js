@@ -43,10 +43,11 @@ const bottomPanelStyle = {
   position:"absolute",
   bottom:0,
   zIndex:99999,
-  margin:"0 10px",
+  margin:"7px 10px",
   width:"30%",
-  height:"35%",
-  overflow: "auto"
+  height:"38%",
+  overflow: "auto",
+  padding: "10px"
 }
 
 var fetchedRequestsCount = 0;
@@ -279,7 +280,7 @@ export default class GeoJSONMap extends Component {
     let reader = new FileReader();
     let self = this;
     reader.onload = function(e) {
-      debugger;
+
       let data = JSON.parse(reader.result);
       self.setState({
         markerGeojson: data,
@@ -671,31 +672,68 @@ export default class GeoJSONMap extends Component {
 
     return (
         <div style={mobileContainerStyle}>
-        <div id="triangle"></div>
-        {
-          /*
-            <MetricPicker />
-          */
-        }
+
         {
           <Panel style={bottomPanelStyle}>
-            <input type="file" onChange={this.handleFileUpload} />
+            <form className="form-horizontal">
+              <div className="form-group">
+                <div className="col-12">
+                  <input type="file" className="form-input" onChange={this.handleFileUpload} />
+                </div>
+              </div>
+            </form>
+
             {this.state.fileUploaded && (
-              <form onSubmit={this.handleSubmitPointsBikes.bind(this)}>
-                <label>
-                  Enter Custom Amount of Bikes:
-                  <input type="text" value={this.state.totalAmountOfBikes} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfBikes')} />
-                </label>
-                <label>
-                  Enter Custom Amount of Points:
-                  <input type="text" value={this.state.totalAmountOfPoints} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfPoints')} />
-                </label><br></br>
-                <input type="submit" value="Submit" />
+              <form className="form-horizontal" onSubmit={this.handleSubmitPointsBikes.bind(this)}>
+                <div className="form-group">
+                  <div className="col-8">
+                    <label className="form-label" >Enter Custom Amount of Bikes:</label>
+                  </div>
+                  <div className="col-4">
+                    <input className="form-input" type="text" id="amount-of-bikes" value={this.state.totalAmountOfBikes} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfBikes')}/>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <div className="col-8">
+                    <label className="form-label" >Enter Custom Amount of Points:</label>
+                  </div>
+                  <div className="col-4">
+                    <input className="form-input" type="text" id="amount-of-points" value={this.state.totalAmountOfPoints} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfPoints')}/>
+                  </div>
+                </div>
+
+                <input className="col-12 btn" type="submit" value="Submit" />
               </form>
             )}
             {this.state.dataLoaded && (
               <div>
-                <form>
+                <form className="form-horizontal" >
+                  <div className="form-group">
+                    <div className="col-12">
+                      <label className="form-label" >Tourism: {this.state.tourism} %</label>
+                    </div>
+                    <div className="col-12">
+                      <input className="slider" type="range" min="0" max="100" value={this.state.tourism} onChange={this.changeTourism.bind(this)} />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <div className="col-12">
+                      <label className="form-label" >Amenities: {this.state.amenities} %</label>
+                    </div>
+                    <div className="col-12">
+                      <input className="slider" type="range" min="0" max="100" value={this.state.amenities} onChange={this.changeAmenities.bind(this)} />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <div className="col-12">
+                      <label className="form-label" >Public Transport: {this.state.publicTransport} %</label>
+                    </div>
+                    <div className="col-12">
+                      <input className="slider" type="range" min="0" max="100" value={this.state.publicTransport} onChange={this.changePublicTransport.bind(this)} />
+                    </div>
+                  </div>
+                </form>
+                {/* <form className="form-horizontal">
                   <FormGroup>
                     <ControlLabel>Tourism: {this.state.tourism} %</ControlLabel>
                     <FormControl type="range"
@@ -715,10 +753,10 @@ export default class GeoJSONMap extends Component {
                     />
 
                   </FormGroup>
-                </form>
-                <div>
-                  <button onClick={this.exportPoints.bind(this)}>Export points</button> <br></br>
-                  <button onClick={this.loadBikes.bind(this,this.loadBikesCallback)}>Refresh Bike Locations</button>
+                </form> */}
+                <div className="columns">
+                  <button className="btn col-5" onClick={this.exportPoints.bind(this)}>Export points</button> <br></br>
+                  <button className="btn col-5" style={{marginLeft: '56px'}} onClick={this.loadBikes.bind(this,this.loadBikesCallback)}>Refresh Bike Locations</button>
                 </div>
               </div>
             )}
