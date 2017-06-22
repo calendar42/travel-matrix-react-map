@@ -4,7 +4,7 @@ This project includes [Bootstrap](https://github.com/facebookincubator/create-re
 
 This project currently expects a local travel matrix on port `5000` to be running as defined with `proxy` in the `package.json`.
 
-Below you will find some information on how to perform common tasks.<br>
+Below you will find some information on how to perform common tasks.<br> 
 You can find the most recent version of this guide [here](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md).
 
 ## Table of Contents
@@ -1520,17 +1520,17 @@ When you build the project, Create React App will place the `public` folder cont
 2. Install `serve` by running `npm install --save serve`.
 
 3. Add this line to `scripts` in `package.json`:
-    
+
     ```
     "now-start": "serve build/",
     ```
-    
+
 4. Run `now` from your project directory. You will see a **now.sh** URL in your output like this:
-    
+
     ```
     > Ready! https://your-project-dirname-tpspyhtdtk.now.sh (copied to clipboard)
     ```
-    
+
     Paste that URL into your browser when the build is complete, and you will see your deployed app.
 
 Details are available in [this article.](https://zeit.co/blog/now-static)
