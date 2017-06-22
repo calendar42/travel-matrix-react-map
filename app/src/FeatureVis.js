@@ -142,7 +142,7 @@ export default class GeoJSONMap extends Component {
     }
   }
 
-  loadBikes(callback){
+  loadBikes(callback,e){
     let url = (process.env.REACT_APP_PROXY_HOST_URL ? process.env.REACT_APP_PROXY_HOST_URL : '') +'/proxy/flickbike';
     return fetch(url)
     .then((response) => response.json())
@@ -685,17 +685,17 @@ export default class GeoJSONMap extends Component {
         {
 
           <Panel style={bottomPanelStyle}>
-            <form className="form-horizontal">
+            <div className="form-horizontal">
               <h5 style={{marginBottom: "10px"}}>Load Data Set & Load Bike Locations</h5>
               <div className="form-group columns">
-                <div className="col-md-12 col-xxl-6">
+                <div className="column col-md-12">
                   <input type="file" className="form-input" onChange={this.handleFileUpload} />
                 </div>
-                <div className="col-md-12 col-xxl-6">
+                <div className="column col-md-12">
                   <button className="btn btn-primary" style={{height: '3.7rem', width:'100%'}} onClick={this.loadBikes.bind(this,this.loadBikesCallback)}><i className="icon icon-refresh"></i>&nbsp; Load Realtime Bike Locations</button>
                 </div>
               </div>
-            </form>
+            </div>
             {this.state.fileUploaded && (
               <form className="form-horizontal" onSubmit={this.handleSubmitPointsBikes.bind(this)} style={{marginTop: "-15px"}}>
                 <div className="form-group columns">
@@ -713,7 +713,7 @@ export default class GeoJSONMap extends Component {
             )}
             {this.state.dataLoaded && (
               <div>
-                <form className="form-horizontal" >
+                <div className="form-horizontal" >
                   <h5 style={{marginBottom: "10px"}}>Tweak Hotspots</h5>
                   <div className="form-group columns">
                     <div className="col-md-12">
@@ -736,7 +736,7 @@ export default class GeoJSONMap extends Component {
                     </div>
                   </div>
                   <button className={ this.state.loading ? 'btn btn-primary disabled col-12' : 'btn btn-primary col-12' } onClick={this.exportPoints.bind(this)}><i className="icon icon-download"></i>&nbsp; Export as CSV</button> <br></br>
-                </form>
+                </div>
               </div>
             )}
         </Panel>
