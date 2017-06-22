@@ -45,7 +45,7 @@ const bottomPanelStyle = {
   zIndex:99999,
   margin:"7px 10px",
   width:"30%",
-  height:"38%",
+  // height:"38%",
   overflow: "auto",
   padding: "10px"
 }
@@ -686,87 +686,57 @@ export default class GeoJSONMap extends Component {
 
           <Panel style={bottomPanelStyle}>
             <form className="form-horizontal">
-              <div className="form-group">
-                <div className="col-12">
+              <h5 style={{marginBottom: "10px"}}>Load Data Set & Load Bike Locations</h5>
+              <div className="form-group columns">
+                <div className="col-md-12 col-xxl-6">
                   <input type="file" className="form-input" onChange={this.handleFileUpload} />
+                </div>
+                <div className="col-md-12 col-xxl-6">
+                  <button className="btn btn-primary" style={{height: '3.7rem', width:'100%'}} onClick={this.loadBikes.bind(this,this.loadBikesCallback)}><i className="icon icon-refresh"></i>&nbsp; Load Realtime Bike Locations</button>
                 </div>
               </div>
             </form>
             {this.state.fileUploaded && (
-              <form className="form-horizontal" onSubmit={this.handleSubmitPointsBikes.bind(this)}>
-                <div className="form-group">
-                  <div className="col-8">
-                    <label className="form-label" >Enter Custom Amount of Bikes:</label>
-                  </div>
-                  <div className="col-4">
+              <form className="form-horizontal" onSubmit={this.handleSubmitPointsBikes.bind(this)} style={{marginTop: "-15px"}}>
+                <div className="form-group columns">
+                  <div className="col-md-6">
+                    <label className="form-label" >Amount of Bikes:</label>
                     <input className="form-input" type="text" id="amount-of-bikes" value={this.state.totalAmountOfBikes} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfBikes')}/>
                   </div>
-                </div>
-                <div className="form-group">
-                  <div className="col-8">
-                    <label className="form-label" >Enter Custom Amount of Points:</label>
-                  </div>
-                  <div className="col-4">
+                  <div className="col-md-6">
+                    <label className="form-label" >Amount of Points:</label>
                     <input className="form-input" type="text" id="amount-of-points" value={this.state.totalAmountOfPoints} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfPoints')}/>
                   </div>
                 </div>
-
-                <input className="col-12 btn" type="submit" value="Submit" />
+                <input className="col-12 btn btn-primary" type="submit" value="Show Hotspots" />
               </form>
             )}
             {this.state.dataLoaded && (
               <div>
                 <form className="form-horizontal" >
-                  <div className="form-group">
-                    <div className="col-12">
+                  <h5 style={{marginBottom: "10px"}}>Tweak Hotspots</h5>
+                  <div className="form-group columns">
+                    <div className="col-md-12">
                       <label className="form-label" >Tourism: {this.state.tourism} %</label>
                     </div>
-                    <div className="col-12">
+                    <div className="col-md-12">
                       <input className="slider" type="range" min="0" max="100" value={this.state.tourism} onChange={this.changeTourism.bind(this)} />
                     </div>
-                  </div>
-                  <div className="form-group">
-                    <div className="col-12">
+                    <div className="col-md-12">
                       <label className="form-label" >Amenities: {this.state.amenities} %</label>
                     </div>
-                    <div className="col-12">
+                    <div className="col-md-12">
                       <input className="slider" type="range" min="0" max="100" value={this.state.amenities} onChange={this.changeAmenities.bind(this)} />
                     </div>
-                  </div>
-                  <div className="form-group">
-                    <div className="col-12">
+                    <div className="col-md-12">
                       <label className="form-label" >Public Transport: {this.state.publicTransport} %</label>
                     </div>
-                    <div className="col-12">
+                    <div className="col-md-12">
                       <input className="slider" type="range" min="0" max="100" value={this.state.publicTransport} onChange={this.changePublicTransport.bind(this)} />
                     </div>
                   </div>
+                  <button className={ this.state.loading ? 'btn btn-primary disabled col-12' : 'btn btn-primary col-12' } onClick={this.exportPoints.bind(this)}><i className="icon icon-download"></i>&nbsp; Export as CSV</button> <br></br>
                 </form>
-                {/* <form className="form-horizontal">
-                  <FormGroup>
-                    <ControlLabel>Tourism: {this.state.tourism} %</ControlLabel>
-                    <FormControl type="range"
-                      value={this.state.tourism}
-                      onChange={this.changeTourism.bind(this)}
-                    />
-                    <ControlLabel>Amenities: {this.state.amenities} %</ControlLabel>
-                    <FormControl type="range"
-                      value={this.state.amenities}
-                      onChange={this.changeAmenities.bind(this)}
-                    />
-
-                    <ControlLabel>Public Transport: {this.state.publicTransport} %</ControlLabel>
-                    <FormControl type="range"
-                      value={this.state.publicTransport}
-                      onChange={this.changePublicTransport.bind(this)}
-                    />
-
-                  </FormGroup>
-                </form> */}
-                <div className="columns">
-                  <button className={ this.state.loading ? 'btn disabled ' : 'btn' } onClick={this.exportPoints.bind(this)}>Export points</button> <br></br>
-                  <button className="btn col-5" style={{marginLeft: '56px'}} onClick={this.loadBikes.bind(this,this.loadBikesCallback)}>Refresh Bike Locations</button>
-                </div>
               </div>
             )}
         </Panel>

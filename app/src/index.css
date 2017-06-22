@@ -5,3 +5,9 @@ html, body, #root{
   height: 100%;
   width: 100%;
 }
+
+@media (min-width: 1440px){
+  .col-xxl-6 {
+    width: 50%;
+  }
+}
