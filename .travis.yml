@@ -7,7 +7,7 @@ script: echo 'no scripts'
 
 after_success:
   - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD" https://docker.c42.io/;
-  - export REPO=docker.c42.io/c42-labs
+  - export REPO=docker.c42.io/flick-bike
   - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
   - docker build -f Dockerfile -t $REPO:$TRAVIS_COMMIT .
   - docker tag $REPO:$TRAVIS_COMMIT $REPO:$TAG
