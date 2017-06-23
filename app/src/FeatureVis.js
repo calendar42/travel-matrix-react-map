@@ -107,20 +107,14 @@ export default class GeoJSONMap extends Component {
     return fetch(url)
     .then((response) => response.json())
     .then((responseJson) => {
-      let isFinishedFetching = false;
-      fetchedRequestsCount ++;
-      if (fetchedRequestsCount === maxCount) {
-        isFinishedFetching = true;
-      }
-
-      callback(responseJson,order,isFinishedFetching);
+      callback(responseJson,order,maxCount);
     })
     .catch((response) => {
       console.error(response.message)
     });
   }
 
-  getAddressesCallback(results,order,isFinishedFetching){
+  getAddressesCallback(results,order,maxCount){
 
     let filteredMarkerGeoJson = this.state.filteredMarkerGeoJson;
     if (typeof(results.results[0]) !== 'undefined') {
@@ -134,6 +128,11 @@ export default class GeoJSONMap extends Component {
       filteredMarkerGeoJson: filteredMarkerGeoJson,
     })
     console.log(this.state.filteredMarkerGeoJson.features[order].properties["address"]);
+    let isFinishedFetching = false;
+    fetchedRequestsCount ++;
+    if (fetchedRequestsCount === (maxCount+1)) {
+      isFinishedFetching = true;
+    }
     if (isFinishedFetching) {
       console.log('We finished fetching');
       fetchedRequestsCount = 0;
@@ -597,10 +596,11 @@ export default class GeoJSONMap extends Component {
       loading: true,
     })
     let points = this.state.filteredMarkerGeoJson;
+    let amountOfPoints = this.state.totalAmountOfPoints;
+    let maxCount = amountOfPoints-1;
     if (typeof(points) !== 'undefined') {
-
-      for (var i = 0; i < 50; i++) {
-        this.getAddresses(this.getAddressesCallback,points.features[i],i,50);
+      for (var i = 0; i < amountOfPoints; i++) {
+        this.getAddresses(this.getAddressesCallback,points.features[i],i,maxCount);
       }
     }
     // for (var i = 0; i < points.features.length; i++) {
@@ -701,11 +701,11 @@ export default class GeoJSONMap extends Component {
                 <div className="form-group columns">
                   <div className="col-md-6">
                     <label className="form-label" >Amount of Bikes:</label>
-                    <input className="form-input" type="text" id="amount-of-bikes" value={this.state.totalAmountOfBikes} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfBikes')}/>
+                    <input className="form-input" type="number" id="amount-of-bikes" value={this.state.totalAmountOfBikes} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfBikes')}/>
                   </div>
                   <div className="col-md-6">
                     <label className="form-label" >Amount of Points:</label>
-                    <input className="form-input" type="text" id="amount-of-points" value={this.state.totalAmountOfPoints} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfPoints')}/>
+                    <input className="form-input" type="number" id="amount-of-points" value={this.state.totalAmountOfPoints} onChange={this.handleChangePointsBikes.bind(this, 'totalAmountOfPoints')}/>
                   </div>
                 </div>
                 <input className="col-12 btn btn-primary" type="submit" value="Show Hotspots" />
