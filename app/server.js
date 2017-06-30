@@ -19,7 +19,7 @@ app.use('/static/media', express.static(path.resolve(__dirname + '/../app/build/
 
 app.use('/proxy/google/', proxy("https://maps.googleapis.com/maps/api/geocode/json", {
   proxyReqPathResolver: function(req, res) {
-    req.url += "&key="+process.env.GOOGLE_API_KEY;
+    req.url += "&key="+process.env.GOOGLE_API_KEY_FLICK_BIKE;
     return "https://maps.googleapis.com/maps/api/geocode/json" + require('url').parse(req.url).path.substring(1);
   }
 }));
