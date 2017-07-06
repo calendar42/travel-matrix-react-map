@@ -747,6 +747,7 @@ export default class GeoJSONMap extends Component {
             accessToken={accessToken}
             center={this.state.center}
             movingMethod="jumpTo"
+            pitch="60"
             bearing={this.state.bearing}
             containerStyle={{ height: "100%", width: "100%" }}>
             { this.state.filteredMarkerGeoJson &&
