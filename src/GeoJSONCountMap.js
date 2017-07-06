@@ -8,7 +8,7 @@ import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
 const { accessToken, center } = config;
 
 const PITCHED_FITBOUNDSOPTIONS = {
-  _default_pitch: 60,
+  _default_pitch: 30,
   padding: 30,
   offset: [0,-130],
   linear: false,
@@ -35,7 +35,7 @@ const ANIMATION_TYPE_BETWEEN_ORIGIN_AND_DESTINATION = 2
   Fit bounds needs different options depending on whether we want the map to be pitched
 */
 
-const DEFAULT_FITBOUNDSOPTIONS = NONPITCHED_FITBOUNDSOPTIONS;  // NON_PITCHED_FITBOUNDSOPTIONS
+const DEFAULT_FITBOUNDSOPTIONS = PITCHED_FITBOUNDSOPTIONS;  // NON_PITCHED_FITBOUNDSOPTIONS
 
 /*
   There are 2 main markers:
@@ -74,7 +74,7 @@ const MAP_STYLE = "mapbox://styles/jasperhartong/cj3a0w0hu00012rpet2mtv7h7"
 
 
 
-/* 
+/*
   Prepare GeoJSON data
   - Transform array of latlons to geoJSON features with random colors
 */
@@ -94,7 +94,7 @@ const markerGeojson = {
   })
 };
 
-/* 
+/*
   Prepare GeoJSON data
   - Add random colors to route data
 */
@@ -119,7 +119,7 @@ const bottomPanelStyle = {
   zIndex:99999,
   margin:"0 10px",
   width:"calc(100% - 20px)",
-  height:"55%",
+  height:"10%",
   overflow: "auto"
 }
 
@@ -149,7 +149,40 @@ export default class GeoJSONMap extends Component {
 
   componentDidMount() {
     this.setFilteredFeatures();
-    this.animate()
+    this.animate();
+    var self = this;
+    window.onkeypress = function(e) {
+      var currentPitch = self.state.pitch;
+      var currentBearing = self.state.bearing;
+      var key = e.keyCode ? e.keyCode : e.which;
+
+      switch (key) {
+        //up
+        case 119:
+          currentPitch++;
+          console.log(currentPitch);
+        break;
+        //down
+        case 115:
+          currentPitch--;
+        break;
+        //left
+        case 97:
+          currentBearing--;
+        break;
+        //right
+        case 100:
+          currentBearing++;
+        break;
+        default:
+        break;
+      }
+      self.setState({
+        bearing: currentBearing,
+        pitch: currentPitch,
+      })
+    }
+    window.onkeypress.bind(this.state);
   }
 
   onMapClick(map, event) {
@@ -159,7 +192,7 @@ export default class GeoJSONMap extends Component {
   }
 
   setFilteredFeatures() {
-    /* 
+    /*
     This function uses the geojsonFilter to show a certain subset of the data.
       - This subset can be based on a samplesize (e.g: 0.05 of the data), or based on a radius
     */
@@ -178,7 +211,7 @@ export default class GeoJSONMap extends Component {
         markerGeojson,
         this.state.originCoords,
         Infinity,
-        0.07
+        0.7
       )
     }, this.setmapBounds);
   }
@@ -276,51 +309,6 @@ export default class GeoJSONMap extends Component {
   render() {
     return (
       <div style={mobileContainerStyle}>
-        <Panel style={bottomPanelStyle}>
-        <h3>
-          Hi there!
-        </h3>
-        <p>
-          <b>Click around above to change the position of the person bubble, zoom out to find a nice spot for it.</b>
-        </p>
-        <p>
-          You'll see the amount of related people around you (and they'll animate slightly).
-        </p>
-        <hr/>
-        <p>
-          There are quite some settings to adjust in the code:
-        </p>
-        <p>
-          <li>The colors</li>
-          <li>The style of the map</li>
-          <li>The animation type and speed</li>
-          <li>The radius for the shown markers/ routes.</li>
-          <li>The initial starting point of the person bubble</li>
-          <li>The speed of the panning animation</li>
-          <li>You can even Pitch the map</li>
-        </p>
-          {/*
-          <form>
-            <FormGroup>
-              <ControlLabel>Map Pitch: {this.state.pitch}</ControlLabel>
-              <FormControl type="range"
-                value={this.state.pitch}
-                onChange={this.changePitch}
-              />
-              <ControlLabel>Map Bearing: {this.state.bearing}</ControlLabel>
-              <FormControl type="range"
-                value={this.state.bearing}
-                onChange={this.changeBearing}
-              />
-              <ControlLabel>Line width: {this.state.lineWidth}</ControlLabel>
-              <FormControl type="range"
-                value={this.state.lineWidth}
-                onChange={this.changeWidth}
-              />
-            </FormGroup>
-          </form>
-          */}
-        </Panel>
 
         <ReactMapboxGl
           style={MAP_STYLE}
@@ -343,11 +331,11 @@ export default class GeoJSONMap extends Component {
                 property: "count",
                 type: "interval",
                 stops: [
-                  [0, 'rgba(255,255,255,0.1)'],
-                  [200, 'rgba(255,255,255,0.2)'],
-                  [400, 'rgba(255,255,255,0.4)'],
-                  [600, 'rgba(255,255,255,0.5)'],
-                  [1000, 'rgba(255,255,255,1)'],
+                  [0, 'rgba(68, 187, 255,0.1)'],
+                  [200, 'rgba(68, 187, 255,0.2)'],
+                  [400, 'rgba(68, 187, 255,0.4)'],
+                  [600, 'rgba(68, 187, 255,0.5)'],
+                  [1000, 'rgba(68, 187, 255,1)'],
                 ]
               }
             }}
@@ -402,7 +390,7 @@ export default class GeoJSONMap extends Component {
               style={{width:"90px", height:"90px"}}
               src={this.state.destinationSrcUrl}/>
           </Marker>
-          
+
         </ReactMapboxGl>
       </div>
     );
