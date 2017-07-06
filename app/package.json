@@ -1,0 +1,25 @@
+{
+  "name": "react-map",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@turf/turf": "^4.1.0",
+    "bootstrap": "^3.3.7",
+    "immutable": "^3.8.1",
+    "mapbox-gl":"^0.36.0",
+    "react": "^15.4.2",
+    "react-bootstrap": "^0.30.8",
+    "react-dom": "^15.4.2",
+    "react-mapbox-gl": "^1.4.0"
+  },
+  "devDependencies": {
+    "react-scripts": "0.9.5"
+  },
+  "scripts": {
+    "start": "HOST=0.0.0.0 react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "proxy": "http://0.0.0.0:5000"
+}
