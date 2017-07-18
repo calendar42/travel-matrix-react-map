@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import ReactMapboxGl, { Marker, GeoJSONLayer } from "react-mapbox-gl";
 import config from "./config.json";
 import {haversineDistance, getRandomColor} from "./utils.js";
+// Input created with: https://github.com/calendar42/RoutingKit/blob/455fc62b791c916855a9d1cd5cf303bd41993ab5/apps/travel-matrix/python_client/apps/congestion-example/README.md
 import routeGeojson from "./data/geojson_filtered_gt_5.json";
 import points from "./data/points.json";
 import { Panel, FormGroup, FormControl, ControlLabel } from "react-bootstrap";
