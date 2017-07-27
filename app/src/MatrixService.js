@@ -10,7 +10,7 @@ export function getGeoJson (departures, arrivals) {
     return new Promise((resolve) => { resolve(); });
   }
   // TODO: construct this URL in a nicer way
-  return fetch("/matrix?departures="+arrivals+"&arrivals="+departures+"&debug=true&search_range=100")
+  return fetch((process.env.REACT_APP_MATRIX_URL ? process.env.REACT_APP_MATRIX_URL : '') + "/proxy/matrix/?departures="+arrivals+"&arrivals="+departures+"&debug=true&search_range=100")
     .then(res => res.text())
     .then(data => {
       return new Promise((resolve, reject) => {
