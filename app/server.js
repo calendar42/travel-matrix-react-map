@@ -16,7 +16,7 @@ app.use('/static/images', express.static(path.resolve(__dirname + '/../app/build
 app.use('/static/js', express.static(path.resolve(__dirname + '/../app/build/static/js')));
 app.use('/static/media', express.static(path.resolve(__dirname + '/../app/build/static/media')));
 
-app.use('/proxy', proxy("http://0.0.0.0:5000", {
+app.use('/proxy', proxy("http://dev05.c42.io:5001", {
   proxyReqPathResolver: function(req, res) {
     console.log(require('url').parse(req.url).path);
     return require('url').parse(req.url).path;

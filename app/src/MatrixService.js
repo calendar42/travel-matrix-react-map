@@ -23,7 +23,7 @@ export function getGeoJson (departures, arrivals) {
         data = JSON.parse(data)
 
         // Walk over rows and columns and push feature into root geojson
-        data.forEach(
+        data.matrix.forEach(
           (row) => (
             row.forEach(
               (column) => (
