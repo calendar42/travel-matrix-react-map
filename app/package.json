@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "express": "^4.15.3",
-    "express-http-proxy": "^1.0.3",
     "bootstrap": "^3.3.7",
+    "express": "^4.15.3",
+    "express-http-proxy": "^1.1.0",
     "immutable": "^3.8.1",
+    "mapbox-gl": "^0.43.0",
     "react": "^15.4.2",
     "react-bootstrap": "^0.30.8",
     "react-dom": "^15.4.2",
-    "react-mapbox-gl": "1.4.0"
+    "react-mapbox-gl": "^3.4.1"
   },
   "devDependencies": {
     "react-scripts": "0.9.5"

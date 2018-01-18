@@ -5,12 +5,17 @@ import { getGeoJson } from './MatrixService.js';
 import { Button } from 'react-bootstrap';
 const { accessToken, center } = config;
 
+const MapGL = ReactMapboxGl({
+  accessToken: accessToken
+});
+
 export default class GeoJSONMap extends Component {
   state = {
     center: center,
     markers: new Map(),
     geojson: null,
-    popup: null
+    popup: null,
+    pitch: [60]
   };
 
 
@@ -65,12 +70,11 @@ export default class GeoJSONMap extends Component {
 
   render() {
     return (
-      <ReactMapboxGl
+      <MapGL
         style="mapbox://styles/mapbox/light-v8"
-        accessToken={accessToken}
         center={this.state.center}
         movingMethod="jumpTo"
-        pitch="60"
+        pitch={this.state.pitch}
         onClick={this.onMapClick.bind(this)}
         containerStyle={{ height: "100vh", width: "100%" }}>
         
@@ -128,7 +132,7 @@ export default class GeoJSONMap extends Component {
         }
 
 
-      </ReactMapboxGl>
+      </MapGL>
     );
   }
 }
