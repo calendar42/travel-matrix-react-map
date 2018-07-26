@@ -36,7 +36,7 @@ App that uses travel-matrix to get the best route between points which has been 
 * `npm build`
 * (manually) upload build-directory to Netlify
 
-> Note that the build output will contain a `_redirects` file to set up a [Netlify Proxy](https://www.netlify.com/docs/redirects/#proxying) to a travelmatrix on dev05.c42.io.
+> Note that the build output will contain a `_redirects` file to set up a [Netlify Proxy](https://www.netlify.com/docs/redirects/#proxying) to a travelmatrix.
 
 ## Third party libraries
 
