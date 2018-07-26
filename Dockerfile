@@ -9,7 +9,5 @@ COPY app/ /usr/src/app/
 
 RUN npm install --silent
 
-RUN npm run build
-
-EXPOSE 8042
-CMD [ "node", "server.js" ]
+EXPOSE 3000
+CMD [ "npm", "start" ]
