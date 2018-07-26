@@ -24,37 +24,19 @@ App that uses travel-matrix to get the best route between points which has been 
 * [docker-compose](https://docs.docker.com/compose/)
 
 
-## Installation
+## Running & Developing
 
-* Clone this repo
-* Clone RoutingKit => https://github.com/calendar42/RoutingKit
-
-
-## Running
-
-> To make use of the oracle endpoints, it is required to change the `Dockerfile` to add the actual oracle api key
-
-* Start back-end => go to `RoutingKit` directory and run `docker-compose up --build`
-* Start front-end => go to `travel-matrix-react-map` directory and run `docker-compose up --build`
-* visit `http://localhost:8042`
-
-
-## Developing
-
-> Recommended
-
-* [node-dev](https://github.com/fgnass/node-dev)
-
-Starting FE
-* cd IN to travel-matrix-react-map folder
 * `npm install`
-* in same folder run `node-dev server.js`
-* in another terminal `REACT_APP_MATRIX_URL="http://localhost:8042" npm start`
+* `npm start`
 * visit `localhost:3000`
-Starting BE
-* cd IN to RoutingKit folder
-* docker-compose up
+* Check package.json to change proxy to any (local) running [TravelMatrix](https://github.com/calendar42/RoutingKit) instance
 
+## Deploying
+
+* `npm build`
+* (manually) upload build-directory to Netlify
+
+> Note that the build output will contain a `_redirects` file to set up a [Netlify Proxy](https://www.netlify.com/docs/redirects/#proxying) to a travelmatrix on dev05.c42.io.
 
 ## Third party libraries
 
