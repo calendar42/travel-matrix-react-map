@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import ReactMapboxGl, { Layer, Feature, GeoJSONLayer, ScaleControl, ZoomControl } from "react-mapbox-gl";
+import {LngLat} from "mapbox-gl";
 import config from "./config.json";
 import { getGeoJson } from './MatrixService.js';
 const { accessToken, center } = config;
@@ -13,8 +14,15 @@ export default class GeoJSONMap extends Component {
     center: center,
     markers: new Map(),
     geojson: null,
-    pitch: [0]
+    pitch: [0],
+    zoom: [5],
   };
+
+  formStyle = {
+    'position': 'fixed',
+    'zIndex': 999,
+    'padding': 5
+  }
 
   _markersTolatLngs = function (markers) {
     return Array.from(markers.values()).map(m => m.latLng)
@@ -28,31 +36,62 @@ export default class GeoJSONMap extends Component {
     };
   };
 
+  onSubmittedPoint = function (event) {
+    /*
+      Stateless form control
+      Parse point-input value and adds Marker on latLng
+     */
+    event.preventDefault()
+    var pointField = event.target.getElementsByClassName('point-input')[0]
+    var lngLat = pointField.value.split(',')
+    pointField.value = ''
+
+    if (lngLat.length != 2) {
+      // minimal validation
+      return;
+    }
+    lngLat = lngLat.map(l => parseFloat(l))
+
+    // in NL lng is always smaller than the lat
+    if (lngLat[0] > lngLat[1]) {
+      lngLat = lngLat.reverse()
+    }
+    lngLat = new LngLat(lngLat[0], lngLat[1])
+    this.extendMarkers(lngLat)
+  }
+
   onMapClick = function (map, event) {
+    this.extendMarkers(event.lngLat)
+  };
+
+  extendMarkers(lngLat) {
     var self = this
-    var marker = this._newMarker(event.lngLat)
+    var marker = this._newMarker(lngLat)
     var new_markers = new Map().set(marker.id, marker)
 
     getGeoJson(
       this._markersTolatLngs(new_markers),
       this._markersTolatLngs(this.state.markers)
     ).then(geojson => {
-      self.setState({
-        "geojson": geojson
-      })
+      self.setState({ geojson })
     });
-    
+
     this.setState({
       "markers": new Map([...this.state.markers, ...new_markers])
     });
-    
-  };
+  }
 
   render() {
     return (
+      <div>
+        <form onSubmit={this.onSubmittedPoint.bind(this)} style={this.formStyle}>
+          <input className='point-input' name="point" placeholder="lat,lng" />
+          <input type="submit" value="add" />
+        </form>
       <MapGL
         style="mapbox://styles/mapbox/light-v8"
         center={this.state.center}
+        zoom = {this.state.zoom}
         movingMethod="jumpTo"
         pitch={this.state.pitch}
         onClick={this.onMapClick.bind(this)}
@@ -118,6 +157,7 @@ export default class GeoJSONMap extends Component {
         </Layer>
 
       </MapGL>
+      </div>
     );
   }
 }
