@@ -43,21 +43,22 @@ export default class GeoJSONMap extends Component {
      */
     event.preventDefault()
     var pointField = event.target.getElementsByClassName('point-input')[0]
-    var lngLat = pointField.value.split(',')
+    var lngLats = pointField.value.split(';').map(l => l.split(','))
     pointField.value = ''
+    for (var lngLat of lngLats) {
+      if (lngLat.length != 2) {
+        // minimal validation
+        continue;
+      }
+      lngLat = lngLat.map(l => parseFloat(l))
 
-    if (lngLat.length != 2) {
-      // minimal validation
-      return;
+      // in NL lng is always smaller than the lat
+      if (lngLat[0] > lngLat[1]) {
+        lngLat = lngLat.reverse()
+      }
+      lngLat = new LngLat(lngLat[0], lngLat[1])
+      this.extendMarkers(lngLat) 
     }
-    lngLat = lngLat.map(l => parseFloat(l))
-
-    // in NL lng is always smaller than the lat
-    if (lngLat[0] > lngLat[1]) {
-      lngLat = lngLat.reverse()
-    }
-    lngLat = new LngLat(lngLat[0], lngLat[1])
-    this.extendMarkers(lngLat)
   }
 
   onMapClick = function (map, event) {
@@ -85,7 +86,7 @@ export default class GeoJSONMap extends Component {
     return (
       <div>
         <form onSubmit={this.onSubmittedPoint.bind(this)} style={this.formStyle}>
-          <input className='point-input' name="point" placeholder="lat,lng" />
+          <input className='point-input' name="point" placeholder="lat,lng; lat,lng" />
           <input type="submit" value="add" />
         </form>
       <MapGL
