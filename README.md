@@ -26,6 +26,7 @@ App that uses travel-matrix to get the best route between points which has been 
 
 ## Running & Developing
 
+* `cd app`
 * `npm install`
 * `npm start`
 * visit `localhost:3000`
