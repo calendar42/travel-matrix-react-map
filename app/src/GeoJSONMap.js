@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { Form, FormGroup, FormControl, InputGroup, Button } from 'react-bootstrap';
 import ReactMapboxGl, { Layer, Feature, GeoJSONLayer, ScaleControl, ZoomControl } from "react-mapbox-gl";
 import {LngLat} from "mapbox-gl";
 import config from "./config.json";
@@ -24,6 +25,16 @@ export default class GeoJSONMap extends Component {
     'padding': 5
   }
 
+  dataDrivencolorStyle = {
+    property: "speed",
+    type: "exponential",
+    stops: [
+      [0, 'red'],
+      [50, 'orange'],
+      [100, 'green'],
+    ]
+  }
+
   _markersTolatLngs = function (markers) {
     return Array.from(markers.values()).map(m => m.latLng)
   };
@@ -46,7 +57,7 @@ export default class GeoJSONMap extends Component {
     var lngLats = pointField.value.split(';').map(l => l.split(','))
     pointField.value = ''
     for (var lngLat of lngLats) {
-      if (lngLat.length != 2) {
+      if (lngLat.length !== 2) {
         // minimal validation
         continue;
       }
@@ -85,10 +96,16 @@ export default class GeoJSONMap extends Component {
   render() {
     return (
       <div>
-        <form onSubmit={this.onSubmittedPoint.bind(this)} style={this.formStyle}>
-          <input className='point-input' name="point" placeholder="lat,lng; lat,lng" />
-          <input type="submit" value="add" />
-        </form>
+        <Form inline onSubmit={this.onSubmittedPoint.bind(this)} style={this.formStyle}>
+          <FormGroup>
+            <InputGroup>
+              <FormControl className='point-input' name="point" placeholder="lat,lng; lat,lng" />
+              <InputGroup.Button>
+                <Button type="submit">add</Button>
+              </InputGroup.Button>
+            </InputGroup>
+          </FormGroup>
+        </Form>
       <MapGL
         style="mapbox://styles/mapbox/light-v8"
         center={this.state.center}
@@ -109,35 +126,25 @@ export default class GeoJSONMap extends Component {
             "visibility": "visible"
           }}
           linePaint= {{
-            "line-color": {
-              property: 'linker',
-              type: 'categorical',
-              default: "#44bbff",
-              stops: [
-                ['as_the_crow', 'red'],
-                ['from_depart', '#223b53'],
-                ['to_arrive', '#e55e5e'],
-              ]
-            },
+            "line-color": this.dataDrivencolorStyle,
             "line-width": 3,
-            "line-opacity": 0.8,
-            "line-offset":0.1,
+            "line-opacity": 0.7,
             "line-blur": 1
           }}
           symbolLayout={{
             "text-optional": true,
             "text-field": "{travel_info}",
             "icon-allow-overlap": true,
-            'icon-anchor': "top-right",
-            "text-optional": true,
+            "symbol-avoid-edges": true,
             "text-font": ["Open Sans Semibold", "Arial Unicode MS Bold"],
-            "text-offset": [0, 3],
-            "text-anchor": "bottom",
+            "text-offset": [1, 0.2],
+            "text-anchor": "left",
             "text-size": 11,
           }}
           symbolPaint={{
             "text-halo-color": "rgba(255,255,255,1)",
-            "text-halo-width": 2
+            "text-halo-width": 2,
+            "text-color": this.dataDrivencolorStyle
           }}
           />
 
