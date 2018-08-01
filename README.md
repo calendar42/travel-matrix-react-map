@@ -2,19 +2,19 @@
 
 App that uses travel-matrix to get the best route between points which has been selected by user.
 
-<!-- MarkdownTOC -->
+<!-- TOC -->
 
-- [Prerequisites](#prerequisites)
-- [Demo](#demo)
-- [Installation](#installation)
-- [Running](#running)
-- [Usage](#usage)
-- [Third party libraries](#third-party-libraries)
-- [Contributing](#contributing)
-- [Credits](#credits)
-- [License](#license)
+- [travel-matrix-react-map](#travel-matrix-react-map)
+    - [Prerequisites](#prerequisites)
+            - [Environment](#environment)
+    - [Running & Developing](#running--developing)
+    - [Deploying](#deploying)
+    - [Third party libraries](#third-party-libraries)
+    - [Contributing](#contributing)
+    - [Credits](#credits)
+    - [License](#license)
 
-<!-- /MarkdownTOC -->
+<!-- /TOC -->
 
 ## Prerequisites
 
