@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Form, FormGroup, FormControl, InputGroup, Button } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, InputGroup, Button, ProgressBar } from 'react-bootstrap';
 import ReactMapboxGl, { Layer, Feature, GeoJSONLayer, ScaleControl, ZoomControl } from "react-mapbox-gl";
 import {LngLat} from "mapbox-gl";
 import config from "./config.json";
@@ -17,6 +17,7 @@ export default class GeoJSONMap extends Component {
     geojson: null,
     pitch: [0],
     zoom: [5],
+    progress: 0
   };
 
   formStyle = {
@@ -53,23 +54,33 @@ export default class GeoJSONMap extends Component {
       Parse point-input value and adds Marker on latLng
      */
     event.preventDefault()
-    var pointField = event.target.getElementsByClassName('point-input')[0]
-    var lngLats = pointField.value.split(';').map(l => l.split(','))
+    const delay = 2000
+    let pointField = event.target.getElementsByClassName('point-input')[0]
+    let lngLats = pointField.value.split(';').map(l => l.split(','))
     pointField.value = ''
-    for (var lngLat of lngLats) {
-      if (lngLat.length !== 2) {
-        // minimal validation
-        continue;
-      }
-      lngLat = lngLat.map(l => parseFloat(l))
 
-      // in NL lng is always smaller than the lat
-      if (lngLat[0] > lngLat[1]) {
-        lngLat = lngLat.reverse()
-      }
-      lngLat = new LngLat(lngLat[0], lngLat[1])
-      this.extendMarkers(lngLat) 
+    let self = this
+    for (let i = 1; i < lngLats.length; i++) {
+      // Schedule points to add
+      setTimeout(function timer() {
+        let lngLat = lngLats[i]
+        if (lngLat.length === 2) {
+          // Only handle valid points
+          lngLat = lngLat.map(l => parseFloat(l))
+          // Expect Dutch lat lon
+          if (lngLat[0] > lngLat[1]) {
+            lngLat = lngLat.reverse()
+          }
+          // add lat lon
+          lngLat = new LngLat(lngLat[0], lngLat[1])
+          self.extendMarkers(lngLat)
+          self.setState({
+            progress: 100 - ((i+1) / lngLats.length * 100)
+          })
+        }
+      }, i * delay);
     }
+    
   }
 
   onMapClick = function (map, event) {
@@ -105,6 +116,9 @@ export default class GeoJSONMap extends Component {
               </InputGroup.Button>
             </InputGroup>
           </FormGroup>
+          { !!this.state.progress &&
+            <ProgressBar now={this.state.progress} />
+          }
         </Form>
       <MapGL
         style="mapbox://styles/mapbox/light-v8"
