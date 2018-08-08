@@ -34,9 +34,20 @@ export function getGeoJson (departures, arrivals) {
                   .concat(cell[GEOJSON]["features"].map((f, k) => {
                     // ensure all features have 'properties' set
                     f["properties"] = f["properties"] || {};
+
+                    // Add travel info to endpoint based on total distances and times
                     if (k === 0) {
-                      // Add travel info to endpoint
                       f["properties"]['travel_info'] = ~~(cell[TRAVELTIME] / 60) + " mins (" + ~~(cell[DISTANCE] / 1000) + " km)";
+                    }
+
+                    // Calculate speed in km/h
+                    if (f["properties"]["travel_time"] && f["properties"]["distance"]) {
+                      f["properties"]["speed"] = f["properties"]["distance"] / f["properties"]["travel_time"] * 3600;
+                      f["properties"]['travel_info'] = ~~(f["properties"]["speed"]) + " km/h";
+                    } else if (f["properties"]["linker"] === "as_the_crow") {
+                      f["properties"]["speed"] = 0
+                    } else if (f["properties"]["linker"]) {
+                      f["properties"]["speed"] = 10
                     }
                     return f;
                   }))
