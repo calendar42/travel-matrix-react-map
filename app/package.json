@@ -5,7 +5,7 @@
   "dependencies": {
     "express": "^4.15.3",
     "express-http-proxy": "^1.0.3",
-    "bootstrap": "^3.3.7",
+    "bootstrap": "^4.1.2",
     "immutable": "^3.8.1",
     "react": "^15.4.2",
     "react-bootstrap": "^0.30.8",
